@@ -76,10 +76,18 @@
         }
     }
 
+    // 类的声明
     public class Person
     {
+        public string Name { get; set; }
+        public int Age { get; set; }
+        public string Gender { get; set; }
+        public DateOnly Birthday { get; set; }
+
+        // constuctor 构造函数
         public Person(string name, int age, string gender, DateOnly birthday)
         {
+           
             Name = name;
             Age = age;
             Gender = gender;
@@ -87,21 +95,21 @@
         }
 
         public override string ToString()
-        {
+        { 
             return $"Name:{Name}, Age:{Age}, Gender:{Gender}, Birthday:{Birthday}";
         }
 
+        // 静态属性
         public static int LegCount = 4;
 
+        // 静态方法
         public static int GetLegCount()
         {
-            return 4;
+            return LegCount;
         }
-        public string Name { get; set; }
-        public int Age { get; set; }
-        public string Gender { get; set; }
-        public DateOnly Birthday { get; set; }
     }
+
+    //结构体:struct
     public struct CoordsStruct
     {
         public CoordsStruct(int x, int y)
@@ -118,13 +126,16 @@
             return $"({X},{Y})";
         }
 
-        public readonly double Sum()
+        public readonly double GetDistance()
         {
-            return X + Y;
+            return Math.Sqrt(Math.Pow(X, 2) + Math.Pow(Y, 2));
         }
     }
+
+
     public class CoordsClass
     {
+        // constructor
         public CoordsClass(int x, int y)
         {
             X = x;
@@ -139,6 +150,10 @@
             return $"({X},{Y})";
         }
 
-        public double Sum()=>X+Y;
+        // sqrt(x^2+y^2)
+        // 实例方法  实例 = 对象
+        // 静态方法
+        // lambda 表达式  语法糖
+        public double GetDistance() => Math.Sqrt(Math.Pow(X, 2) + Math.Pow(Y, 2));
     }
 }
