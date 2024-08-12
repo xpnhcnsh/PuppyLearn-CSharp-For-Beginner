@@ -2,7 +2,7 @@
 
 ## Brief
 
-This repo is a tutorial for code beginners, key words: C#, ASP.Net Core WebAPI, Angular and Typescript. There is an online tutorial matching this repo, for futher online teaching requirement, please contact me by Email: <xpnhcnsh@gmail.com>.
+This repo is a tutorial for code beginners, key words: C#, ASP.Net Core WebAPI, Angular and Typescript. There is an online tutorial matching this repo, for futher online teaching requirement, please contact me according to Contact section.
 
 All the quizzes are in /Quiz/Program.cs, this file is updating time by time, you can sync fork to retrieve new quizzes.
 
