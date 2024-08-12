@@ -19,5 +19,6 @@ I will also give solutions to all the quizzes, so you can compare yours to mine.
 
 ## Contact
 
-Email: xpnhcnsh@gmail.com
+Email: <xpnhcnsh@gmail.com>
+
 Wechat: 459101071
