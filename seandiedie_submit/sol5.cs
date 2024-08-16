@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace seandiedie_submit
 {
-    internal class sol5
-    {class Program
-        {
-            static void Main()
+    internal class Sol5
+    {
+        
+            public  void Main()
             {
                 Console.WriteLine("请输入100到999之间的整数");
 
@@ -23,7 +23,7 @@ namespace seandiedie_submit
                     Console.WriteLine(sum);
                 }
             }
-        }
+        
 
     }
 }
