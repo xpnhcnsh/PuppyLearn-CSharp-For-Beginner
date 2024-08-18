@@ -3,42 +3,40 @@
 #region 求和
 var cal = new Calculator();
 var sw = new Stopwatch();
-int value = 1000;
-sw.Start();
-Console.WriteLine(cal.SumFrom1ToXLoop(value));
-sw.Stop();
-Console.WriteLine($"SumFrom1ToXLoop takes {sw.Elapsed.TotalMilliseconds}ms");
-sw.Restart();
-Console.WriteLine(cal.SumFrom1ToXRecursion(value));
-sw.Stop();
-Console.WriteLine($"SumFrom1ToXRecursion takes {sw.Elapsed.TotalMilliseconds}ms");
-sw.Restart();
-Console.WriteLine(cal.SumFrom1ToXMath(value));
-sw.Stop();
-Console.WriteLine($"SumFrom1ToXMath takes {sw.Elapsed.TotalMilliseconds}ms");
+ulong value = 10000;
+//sw.Start();
+//Console.WriteLine(int.MaxValue);
+//Console.WriteLine(cal.SumFrom1ToXLoop(value));
+//sw.Stop();
+//Console.WriteLine($"SumFrom1ToXLoop takes {sw.Elapsed.TotalMilliseconds}ms");
+//sw.Restart();
+//Console.WriteLine(cal.SumFrom1ToXRecursion(value));
+//sw.Stop();
+//Console.WriteLine($"SumFrom1ToXRecursion takes {sw.Elapsed.TotalMilliseconds}ms");
+//sw.Restart();
+//Console.WriteLine(cal.SumFrom1ToXMath(value));
+//sw.Stop();
+//Console.WriteLine($"SumFrom1ToXMath takes {sw.Elapsed.TotalMilliseconds}ms");
 #endregion
 
 #region 阶乘
-value = 10; 
-sw.Restart();
-Console.WriteLine(cal.FactorialLoop((ulong)value));
-sw.Stop();
-Console.WriteLine($"FactorialLoop takes {sw.Elapsed.TotalMilliseconds}ms");
-sw.Restart();
-Console.WriteLine(cal.FactorialRecursion((ulong)value));
-sw.Stop();
-Console.WriteLine($"FactorialRecursion takes {sw.Elapsed.TotalMilliseconds}ms");
-sw.Restart();
-Console.WriteLine(cal.BinarySearch([1,2,4,3,6,5,0], 1));
-sw.Stop();
-Console.WriteLine($"BinarySearch takes {sw.Elapsed.TotalMilliseconds}ms");
+//value = 10;
+//sw.Restart();
+//Console.WriteLine(cal.FactorialLoop(value));
+//sw.Stop();
+//Console.WriteLine($"FactorialLoop takes {sw.Elapsed.TotalMilliseconds}ms");
+//sw.Restart();
+//Console.WriteLine(cal.FactorialRecursion(value));
+//sw.Stop();
+//Console.WriteLine($"FactorialRecursion takes {sw.Elapsed.TotalMilliseconds}ms");
+//sw.Restart();
 #endregion
 
 #region 二分查找
-sw.Restart();
-Console.WriteLine(cal.BinarySearch([1, 2, 4, 3, 6, 5, 0], 1));
-sw.Stop();
-Console.WriteLine($"BinarySearch takes {sw.Elapsed.TotalMilliseconds}ms");
+//sw.Restart();
+//Console.WriteLine(cal.BinarySearch([1, 2, 4, 3, 6, 5, 0], 1));
+//sw.Stop();
+//Console.WriteLine($"BinarySearch takes {sw.Elapsed.TotalMilliseconds}ms");
 #endregion
 
 #region 判断List中元素是否唯一
@@ -48,12 +46,12 @@ Console.WriteLine(cal.CheckUnique([1, 2, 4, 3, 6, 1, 5, 0]));
 class Calculator
 {
     /// <summary>
-    /// O(n)
+    /// O(n) 时间复杂度
     /// </summary>
-    public int SumFrom1ToXLoop(int x)
+    public ulong SumFrom1ToXLoop(ulong x)
     {
-        int result = 0;
-        for (int i = 0; i <= x; i++)
+        ulong result = 0;
+        for (ulong i = 0; i <= x; i++)
         {
             result += i;
         }
@@ -63,7 +61,7 @@ class Calculator
     /// <summary>
     /// O(1)<T<O(n),但更占用内存。
     /// </summary>
-    public int SumFrom1ToXRecursion(int x)
+    public ulong SumFrom1ToXRecursion(ulong x)
     {
         if (x == 1)
         {
@@ -71,7 +69,7 @@ class Calculator
         }
         else
         {
-            int result = x + SumFrom1ToXRecursion(x - 1);
+            ulong result = x + SumFrom1ToXRecursion(x - 1);
             return result;
         }
     }
@@ -79,7 +77,7 @@ class Calculator
     /// <summary>
     /// O(1)
     /// </summary>
-    public int SumFrom1ToXMath(int x)
+    public ulong SumFrom1ToXMath(ulong x)
     {
         return (1 + x) * x / 2;
     }
@@ -132,7 +130,7 @@ class Calculator
         {
             int mid = (low + high) / 2;
             if (x[mid] == target)
-                return (true, $"Target found!");
+                return (true, "Target found!");
             else if (x[mid] < target)
                 return _BinarySearch(x, target, mid + 1, high);
             else
