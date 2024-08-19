@@ -22,10 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quiz", "Quiz\Quiz.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Solutions", "Solutions\Solutions.csproj", "{E014C8C6-8A14-40B4-9EA6-8499217F6D53}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BFC065EE-938B-4843-9E1A-B283D17A4D82}"
-	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch1_L5", "Ch1_L5\Ch1_L5.csproj", "{ED813169-FC2E-4880-8BC6-9B28156F3EF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,6 +62,10 @@ Global
 		{E014C8C6-8A14-40B4-9EA6-8499217F6D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E014C8C6-8A14-40B4-9EA6-8499217F6D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E014C8C6-8A14-40B4-9EA6-8499217F6D53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED813169-FC2E-4880-8BC6-9B28156F3EF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED813169-FC2E-4880-8BC6-9B28156F3EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED813169-FC2E-4880-8BC6-9B28156F3EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED813169-FC2E-4880-8BC6-9B28156F3EF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
