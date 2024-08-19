@@ -17,7 +17,7 @@
 #endregion
 
 #region Quiz2:打印九九乘法表
-Sol2.Haskell();
+//Sol2.Haskell();
 #endregion
 
 #region Quiz3:十个数
@@ -25,6 +25,33 @@ Sol2.Haskell();
 #endregion
 
 #region Quiz4:随机四则运算
-Sol4.RunV1();
-Sol4.RunV2();
+//Sol4.RunV1();
+//Sol4.RunV2();
+#endregion
+
+#region Quiz5:个位十位百位之和
+//Sol5.Run();
+#endregion
+
+#region Quiz6:前n项和
+//dynamic res;
+//var Sol6Obj = new Sol6();
+//if (Sol6Obj.SumOfFirstNs([3, 2, 3], 100, out res))
+//    Console.WriteLine($"Result is {res}");
+//else
+//    Console.WriteLine(res);
+#endregion
+
+#region Quiz7:反转List
+try
+{
+    //调用ReverseAList
+    Console.WriteLine(string.Join(",", Sol7.ReverseAList(["Peter", "Syd", "ButterFly", "Shit"], 1, 2)));
+    //调用ReverseAListLinq
+    Console.WriteLine(string.Join(",", new List<string> { "Peter", "Syd", "ButterFly", "Shit" }.ReverseAListLinq(1, 2)));
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message); ;
+}
 #endregion
