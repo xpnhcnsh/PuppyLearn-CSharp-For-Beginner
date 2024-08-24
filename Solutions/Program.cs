@@ -43,15 +43,20 @@
 #endregion
 
 #region Quiz7:反转List
-try
-{
-    //调用ReverseAList
-    Console.WriteLine(string.Join(",", Sol7.ReverseAList(["Peter", "Syd", "ButterFly", "Shit"], 1, 2)));
-    //调用ReverseAListLinq
-    Console.WriteLine(string.Join(",", new List<string> { "Peter", "Syd", "ButterFly", "Shit" }.ReverseAListLinq(1, 2)));
-}
-catch (Exception ex)
-{
-    Console.WriteLine(ex.Message); ;
-}
+//try
+//{
+//    //调用ReverseAList
+//    Console.WriteLine(string.Join(",", Sol7.ReverseAList(["Peter", "Syd", "ButterFly", "Shit"], 1, 2)));
+//    //调用ReverseAListLinq
+//    Console.WriteLine(string.Join(",", new List<string> { "Peter", "Syd", "ButterFly", "Shit" }.ReverseAListLinq(1, 2)));
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine(ex.Message); ;
+//}
+#endregion
+
+#region Quiz8:
+var Sol8 = new Sol8();
+Sol8.Run();
 #endregion

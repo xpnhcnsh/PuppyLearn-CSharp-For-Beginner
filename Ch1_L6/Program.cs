@@ -29,7 +29,7 @@
 #region 自定义delegate
 //Calculator cal = new Calculator();
 ////我们自定义的委托，返回值是一个int，参数是两个int，而Add和Sub方法都满足这个情况，因此这两个方法都可以用我们的委托进行间接调用。
-//CalcDelegate cal1 = new CalcDelegate(cal.Add);
+//CalcDelegate cal1 = cal.Add;
 //CalcDelegate cal2 = new CalcDelegate(cal.Sub);
 //int x = 100;
 //int y = 200;
@@ -66,43 +66,43 @@
 //另一个例子：
 //框架作者写一个GotoStation()方法，第一步：买票；第二步；去车站；第三步：坐车。
 //作为框架的作者，定义了第一步和第三步的具体方法，但第二步由使用框架的人自己去实现。
-void GotoStation(Action Step2)
-{
-    Console.WriteLine();
-    Step1();
-    Step2.Invoke();
-    Step3();
-}
+//void GotoStation(Action Step2)
+//{
+//    Console.WriteLine();
+//    Step1();
+//    Step2.Invoke();
+//    Step3();
+//}
 
-void Step1()
-{
-    Console.WriteLine("Buy tickets on 12306...");
-}
+//void Step1()
+//{
+//    Console.WriteLine("Buy tickets on 12306...");
+//}
 
-void Step3()
-{
-    Console.WriteLine("On board...");
-}
+//void Step3()
+//{
+//    Console.WriteLine("On board...");
+//}
 
-//用户A自己写了TakeBus方法，并封装成了Action，作为参数传入GotoStation方法中。
-void TakeBus()
-{
-    Console.WriteLine("go to station by bus...");
-}
-Action step2 = new Action(TakeBus);
-GotoStation(step2);
+////用户A自己写了TakeBus方法，并封装成了Action，作为参数传入GotoStation方法中。
+//void TakeBus()
+//{
+//    Console.WriteLine("go to station by bus...");
+//}
+//Action step2 = new Action(TakeBus);
+//GotoStation(step2);
 
-//用户B自己写了TakeSubway方法，封装成了Action，作为参数传入GotoStation方法中。
-void TakeSubway()
-{
-    Console.WriteLine("go to station by subway...");
-}
-Action takeSubway = new Action(TakeSubway);
-GotoStation(takeSubway);
+////用户B自己写了TakeSubway方法，封装成了Action，作为参数传入GotoStation方法中。
+//void TakeSubway()
+//{
+//    Console.WriteLine("go to station by subway...");
+//}
+//Action takeSubway = new Action(TakeSubway);
+//GotoStation(takeSubway);
 
-//用户C用Lambda表达式的方式创建Action并传入GotoStation
-Action byCar = new Action(() => Console.WriteLine("go to station by car..."));
-GotoStation(byCar);
+////用户C用Lambda表达式的方式创建Action并传入GotoStation
+//Action byCar = new Action(() => Console.WriteLine("go to station by car..."));
+//GotoStation(byCar);
 
 //使用过程中，用户A和B不需要关心step1和step3的实现，之需要自己实现step2的方法即可。
 //而框架使用者不需要关心step2，只需要提前实现好step1和step3即可。
