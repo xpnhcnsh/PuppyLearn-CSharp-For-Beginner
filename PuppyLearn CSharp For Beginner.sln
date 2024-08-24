@@ -28,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ch1_L6", "Ch1_L6\Ch1_L6.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyUtilities", "MyUtilities\MyUtilities.csproj", "{27434AAA-3132-4B20-B96F-BBECF90FB8BB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyUtilities", "MyUtilities\MyUtilities.csproj", "{5F9BB6EB-F28F-49F3-8D1F-AA2DE4D26223}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
