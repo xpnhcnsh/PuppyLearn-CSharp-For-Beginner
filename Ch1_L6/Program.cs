@@ -61,6 +61,46 @@
 //Console.WriteLine($"{box1.Product.Name},\n{box2.Product.Name}");
 
 //以上作者A和B的写作过程，实现了解耦。通常作者A的工作，是实现一个框架，而作者B的工作，是使用该框架实现具体的功能。
+
+
+//另一个例子：
+//框架作者写一个GotoStation()方法，第一步：买票；第二步；去车站；第三步：坐车。
+//作为框架的作者，定义了第一步和第三步的具体方法，但第二步由使用框架的人自己去实现。
+void GotoStation(Action Step2)
+{
+    Step1();
+    Step2.Invoke();
+    Step3();
+}
+
+void Step1()
+{
+    Console.WriteLine("Buy tickets on 12306...");
+}
+
+void Step3()
+{
+    Console.WriteLine("On board...");
+}
+
+//用户A自己写了TakeBus方法，并封装成了Action，作为参数传入GotoStation方法中。
+void TakeBus()
+{
+    Console.WriteLine("go to station by bus...");
+}
+Action step2 = new Action(TakeBus);
+GotoStation(step2);
+
+//用户B自己写了TakeSubway方法，封装成了Action，作为参数传入GotoStation方法中。
+void TakeSubway()
+{
+    Console.WriteLine("go to station by subway...");
+}
+Action takeSubway = new Action(TakeSubway);
+GotoStation(takeSubway);
+
+//使用过程中，用户A和B不需要关心step1和step3的实现，之需要自己实现step2的方法即可。
+//而框架使用者不需要关心step2，只需要提前实现好step1和step3即可。
 #endregion
 
 #region 多播委托：Multicast Delegate，一个委托中传入多个方法。
@@ -82,56 +122,56 @@
 #endregion
 
 #region 使用Interface替代delegate。
-//delegate使用不当会造成内存泄露或性能下降，如果要实现协作，可以使用Interface替代。
-//下面使用Interface重构ProductFactory
-IProductFactory PizzFactory = new PizzaFactory();
-IProductFactory ToyCarFactory = new ToyCarFactory();
-WrapFactoryInterface WrapFactoryInterface = new WrapFactoryInterface();
+////delegate使用不当会造成内存泄露或性能下降，如果要实现协作，可以使用Interface替代。
+////下面使用Interface重构ProductFactory
+//IProductFactory PizzFactory = new PizzaFactory();
+//IProductFactory ToyCarFactory = new ToyCarFactory();
+//WrapFactoryInterface WrapFactoryInterface = new WrapFactoryInterface();
 
-Box box1 = WrapFactoryInterface.WrapProduct(PizzFactory);
-Box box2 = WrapFactoryInterface.WrapProduct(ToyCarFactory);
-Console.WriteLine($"{box1.Product.Name},\n{box2.Product.Name}");
+//Box box1 = WrapFactoryInterface.WrapProduct(PizzFactory);
+//Box box2 = WrapFactoryInterface.WrapProduct(ToyCarFactory);
+//Console.WriteLine($"{box1.Product.Name},\n{box2.Product.Name}");
 
-/// <summary>
-/// 通常Leader写接口，组员具体实现Leader写的接口即可。程序中对接口的定义，就是对程序功能的定义，但功能的具体实现，则由程序员完成。
-/// </summary>
-interface IProductFactory
-{
-    Product Make();
-}
+///// <summary>
+///// 通常Leader写接口，组员具体实现Leader写的接口即可。程序中对接口的定义，就是对程序功能的定义，但功能的具体实现，则由程序员完成。
+///// </summary>
+//interface IProductFactory
+//{
+//    Product Make();
+//}
 
-class PizzaFactory : IProductFactory
-{
-    public Product Make()
-    {
-        Product product = new Product();
-        product.Name = "Cheese Pizza";
-        product.Price = 30;
-        return product;
-    }
-}
+//class PizzaFactory : IProductFactory
+//{
+//    public Product Make()
+//    {
+//        Product product = new Product();
+//        product.Name = "Cheese Pizza";
+//        product.Price = 30;
+//        return product;
+//    }
+//}
 
-class ToyCarFactory : IProductFactory
-{
-    public Product Make()
-    {
-        Product product = new Product();
-        product.Name = "Truck";
-        product.Price = 100;
-        return product;
-    }
-}
+//class ToyCarFactory : IProductFactory
+//{
+//    public Product Make()
+//    {
+//        Product product = new Product();
+//        product.Name = "Truck";
+//        product.Price = 100;
+//        return product;
+//    }
+//}
 
-class WrapFactoryInterface
-{
-    public Box WrapProduct(IProductFactory productFactory)
-    {
-        Box box = new Box();
-        Product product = productFactory.Make();
-        box.Product = product;
-        return box;
-    }
-}
+//class WrapFactoryInterface
+//{
+//    public Box WrapProduct(IProductFactory productFactory)
+//    {
+//        Box box = new Box();
+//        Product product = productFactory.Make();
+//        box.Product = product;
+//        return box;
+//    }
+//}
 #endregion
 
 class Calculator
