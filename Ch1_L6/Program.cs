@@ -68,6 +68,7 @@
 //作为框架的作者，定义了第一步和第三步的具体方法，但第二步由使用框架的人自己去实现。
 void GotoStation(Action Step2)
 {
+    Console.WriteLine();
     Step1();
     Step2.Invoke();
     Step3();
@@ -98,6 +99,10 @@ void TakeSubway()
 }
 Action takeSubway = new Action(TakeSubway);
 GotoStation(takeSubway);
+
+//用户C用Lambda表达式的方式创建Action并传入GotoStation
+Action byCar = new Action(() => Console.WriteLine("go to station by car..."));
+GotoStation(byCar);
 
 //使用过程中，用户A和B不需要关心step1和step3的实现，之需要自己实现step2的方法即可。
 //而框架使用者不需要关心step2，只需要提前实现好step1和step3即可。
