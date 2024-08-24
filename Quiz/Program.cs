@@ -21,3 +21,11 @@
 //Quiz7:
 //反转一个List<T>，用户可以自定义需要反转的范围，例如输入0,2，表示只对index在[1,3]的sublist进行反转，其余部分不变；如果只
 //输入一个List<T>，那么将所有内容反转。
+
+//Quiz8:
+//MyUtlities是一个Class Library， 其中有两个文件：MyClass.cs中定义了Student和MyClass两个类，其中MyClass类有一个
+//静态方法，可以生成一个默认的MyClass对象，其中有5个学生；而MyDelegates.cs文件中声明了3个委托。仔细阅读MyClass.cs和MyDelegates.cs两个文件，
+//查看MyClass类中需要用到哪些委托去计算其属性，然后在自己的Sol8.cs中，利用MyClass.cs和MyDelegates.cs实现：1.使用静态方法创建一个班级；
+//2.根据MyDelegates.cs，自己写相应委托的方法，并完成委托绑定；3.调用ProcessBFR()方法。
+
+//正确结果应为：1.实现对班级每个学生BFR的计算；2.实现班级平均BFR的计算；3.打印出处理前和处理后的数据。
