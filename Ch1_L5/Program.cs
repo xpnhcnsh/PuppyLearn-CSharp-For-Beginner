@@ -1,4 +1,5 @@
-﻿
+﻿//参数
+
 #region 索引器indexer
 //Student stu1 = new Student();
 //stu1.Name = "Tim";

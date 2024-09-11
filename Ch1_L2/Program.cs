@@ -1,4 +1,5 @@
-﻿using Ch1_L1_Checked;
+﻿//值类型和引用类型
+using Ch1_L1_Checked;
 namespace Ch1_L2
 {
     internal class Program

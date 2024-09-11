@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿//算法
+using System.Diagnostics;
 
 #region 求和
 var cal = new Calculator();
