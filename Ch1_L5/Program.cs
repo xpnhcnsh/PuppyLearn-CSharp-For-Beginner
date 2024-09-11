@@ -33,6 +33,9 @@
 #endregion
 
 #region 引用参数：ref修饰的参数；引用参数不会对传入的参数创建副本。
+using System.ComponentModel.Design;
+using System.Reflection.Metadata.Ecma335;
+
 int y = 1;
 UpdateXRef(ref y);
 Console.WriteLine(y); //y的值被更改，表示UpdateXRef内部没有创建参数的副本，而是对参数本身进行操作。
@@ -55,9 +58,29 @@ static void UpdateStuRef(ref Student stu)
 	stu = new Student() { Name = "Tim" };
 	//stu.Name = "Tim";
 	Console.WriteLine($"{stu.GetHashCode()}, {stu.Name}");
-	//这里new了一个新对象
+	//这里new了一个新对象。
 	//如果直接对ref stu的Name属性进行修改，那么HashCode不会改变，但是外部对象的Name会随之更改。
 	//这和引用类型作为值参数传入的效果是一样的，因此可以省略ref关键字。
+}
+#endregion
+
+#region ref return: 方法返回一个引用而不是值。
+int v1 = 10, v2 = 20;
+Console.WriteLine($"v1:{v1}, v2:{v2}");
+//这里返回的max实际是v2的引用，即max和v2是同一个对象。
+//调用时必须在等号左右分别标记ref，否则max依然是值类型。
+ref int max = ref Max(ref v1, ref v2);
+Console.WriteLine($"max:{max}");
+max++;
+//对ref max进行修改后，发现v2的值也随之改变。
+Console.WriteLine($"v1:{v1}, v2:{v2}");
+
+//返回形参的引用而不是值。
+static ref int Max(ref int x, ref int y)
+{
+	if (x > y)
+		return ref x;
+	return ref y;
 }
 #endregion
 
@@ -233,6 +256,7 @@ class DoubleParser
 /// <summary>
 /// Double类型的扩展方法
 /// </summary>
+/// 
 static class DoubleExtension
 {
 	//this关键字修饰，表示Round是Double类的扩展方法。
