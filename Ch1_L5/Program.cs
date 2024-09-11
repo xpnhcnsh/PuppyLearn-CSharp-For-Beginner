@@ -33,31 +33,32 @@
 #endregion
 
 #region 引用参数：ref修饰的参数；引用参数不会对传入的参数创建副本。
-//int y = 1;
-//UpdateXRef(ref y);
-//Console.WriteLine(y); //y的值被更改，表示UpdateXRef内部没有创建参数的副本，而是对参数本身进行操作。
+int y = 1;
+UpdateXRef(ref y);
+Console.WriteLine(y); //y的值被更改，表示UpdateXRef内部没有创建参数的副本，而是对参数本身进行操作。
 
-//Student outerStu = new Student() { Name = "Tom"};
-//Console.WriteLine($"{outerStu.GetHashCode()}, {outerStu.Name}");
-//UpdateStuRef(ref outerStu);
-//Console.WriteLine($"{outerStu.GetHashCode()}, {outerStu.Name}"); //outerStu变成了UpdateStuRef函数内部新创建的对象。
+Student outerStu = new Student() { Name = "Tom" };
+Console.WriteLine($"{outerStu.GetHashCode()}, {outerStu.Name}");
+UpdateStuRef(ref outerStu);
+Console.WriteLine($"{outerStu.GetHashCode()}, {outerStu.Name}"); //outerStu变成了UpdateStuRef函数内部新创建的对象。
 
-////值类型作为引用参数
-//static void UpdateXRef(ref int x)
-//{
-//    x = x + 1;
-//    Console.WriteLine($"{x.GetHashCode()}, {x}");
-//}
+//值类型作为引用参数
+static void UpdateXRef(ref int x)
+{
+	x = x + 1;
+	Console.WriteLine($"{x.GetHashCode()}, {x}");
+}
 
-////引用类型作为引用参数
-//static void UpdateStuRef(ref Student stu)
-//{
-//	stu = new Student() { Name = "Tim"};
-//    Console.WriteLine($"{stu.GetHashCode()}, {stu.Name}");
-//	//这里new了一个新对象
-//	//如果直接对ref stu的Name属性进行修改，那么HashCode不会改变，但是外部对象的Name会随之更改。
-//	//这和引用类型作为值参数传入的效果是一样的。
-//}
+//引用类型作为引用参数
+static void UpdateStuRef(ref Student stu)
+{
+	stu = new Student() { Name = "Tim" };
+	//stu.Name = "Tim";
+	Console.WriteLine($"{stu.GetHashCode()}, {stu.Name}");
+	//这里new了一个新对象
+	//如果直接对ref stu的Name属性进行修改，那么HashCode不会改变，但是外部对象的Name会随之更改。
+	//这和引用类型作为值参数传入的效果是一样的，因此可以省略ref关键字。
+}
 #endregion
 
 #region 输出参数：out修饰的参数；输出参数不会对传入的参数创建副本。
@@ -149,16 +150,16 @@
 #endregion
 
 #region 扩展方法：this修饰的参数；必须是public static；必须是形参列表的第一个。
-double x = 1.12345;
-double y = Math.Round(x,3);
-Console.WriteLine(y);
-//当Round方法成为Double的扩展方法后：
-double z = x.Round(4); //这里会发现，Round(int digit)只有一个参数digit，因为经过this修饰后，double input这个参数就是x本身。
-Console.WriteLine(z);
+//double x = 1.12345;
+//double y = Math.Round(x,3);
+//Console.WriteLine(y);
+////当Round方法成为Double的扩展方法后：
+//double z = x.Round(4); //这里会发现，Round(int digit)只有一个参数digit，因为经过this修饰后，double input这个参数就是x本身。
+//Console.WriteLine(z);
 
-//Linq是基于扩展方法的实现。
-List<int> inputList = [9, 10, 11, 12];
-Console.WriteLine(inputList.All(x => x > 10));
+////Linq是基于扩展方法的实现。
+//List<int> inputList = [9, 10, 11, 12];
+//Console.WriteLine(inputList.All(x => x > 10));
 //List类中没有All方法的实现，因为所有Linq方法都是基于扩展方法实现的。
 //进入All的实现，会发现All方法位于一个叫Enumerable的static类中，并且形参第一位用this关键字修饰，类型为this IEnumerable<TSource>，
 //因此所有实现了IEnumerable这个接口的类，都可以通过该扩展方法调用All方法。
