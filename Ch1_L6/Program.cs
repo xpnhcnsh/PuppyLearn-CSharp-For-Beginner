@@ -1,7 +1,7 @@
 ﻿//类：继承、多态、抽象类与开闭原则、接口
 
 using System;
-using System.Reflection.Metadata.Ecma335;
+
 #region 继承：类在功能上的拓展
 //Type t = typeof(Car);
 //Console.WriteLine(t.BaseType.FullName);
@@ -12,8 +12,8 @@ using System.Reflection.Metadata.Ecma335;
 #endregion
 
 #region is关键字：子类实例 is 父类
-//Car car = new Car(1, 1);
-//Console.WriteLine($"{car is Vechicle}   {car is Object}");
+//Car car = new Car(1);
+//Console.WriteLine($"{car is Vechicle}   {car is Object}  {car is Car}");
 #endregion
 
 #region public, protected, private, internal, protected internal
@@ -34,22 +34,23 @@ using System.Reflection.Metadata.Ecma335;
 // internal             x      x                           
 // private
 // 
-BaseClass baseClass = new BaseClass();
-baseClass.A = 10;
-//baseClass.B = 10; //error
-//baseClass.C = 10; //error
-DerivedClass derivedClass = new DerivedClass();
-derivedClass.A = 20;
-//derivedClass.B = 20; //error，只能在DerivedClass类内部访问到base.B。
-//derivedClass.C = 10; //error
+
+//BaseClass baseClass = new BaseClass();
+//baseClass.A = 10;
+////baseClass.B = 10; //error
+////baseClass.C = 10; //error
+//DerivedClass derivedClass = new DerivedClass();
+//derivedClass.A = 20;
+////derivedClass.B = 20; //error，只能在DerivedClass类内部访问到base.B。
+////derivedClass.C = 10; //error
 #endregion
 
-#region 多态(polymorphism)：使用父类引用子类实例(子类拥有父类的所有成员(public字段、public属性、public方法))
-Vechicle v1 = new Car(1);
+#region 多态(polymorphism)：使用父类引用子类实例(子类拥有父类的所有成员(字段、属性、方法))
+//Vechicle v1 = new Car(2);
 
 //Console.WriteLine(v1.WheelsNum);
-//Console.WriteLine(v1.GetGas()); //基类引用后，无法访问子类成员。
-//Car c1 = new Car(1);
+////Console.WriteLine(v1.GetGas()); //基类引用后，无法访问子类成员。
+//Car c1 = new Car(2);
 //Console.WriteLine(c1.WheelsNum);
 
 //Console.WriteLine(c1.GetGas());
@@ -60,15 +61,15 @@ Vechicle v1 = new Car(1);
 #endregion
 
 #region virtual & override：基类引用子类实例后，可以访问到子类的成员。
-v1.GetSpeed(); //这里虽然是用Vechicle引用Car实例，但调用的GetSpeed()方法是属于Car的。
+//v1.GetSpeed(); //这里虽然是用Vechicle引用Car实例，但调用的GetSpeed()方法是属于Car的。
 #endregion
 
 #region 对比virtual和new：虚成员vs子类对父类成员的隐藏
 //new和override都可以对virtual成员进行重写/覆盖；override会覆盖所有上层的父类直至基类；new只覆盖一层父类。
-BaseClass sdcv1 = new SecondDerivedClassV1();
-BaseClass sdcv2 = new SecondDerivedClassV2();
-sdcv1.Print(); //使用override重写virtual成员时，当有多层继承，使用基类引用子类实例，调用override方法实际调用了最新的override方法。
-sdcv2.Print(); //使用new重写virtual成员时，当有多层继承，使用基类引用子类实例，调用new方法实际调用了最后一层的override方法，也就是DerivedClass这一层。
+//BaseClass sdcv1 = new SecondDerivedClassV1();
+//BaseClass sdcv2 = new SecondDerivedClassV2();
+//sdcv1.Print(); //使用override重写virtual成员时，当有多层继承，使用基类引用子类实例，调用override方法实际调用了最新的override方法。
+//sdcv2.Print(); //使用new重写virtual成员时，当有多层继承，使用基类引用子类实例，调用new方法实际调用了最后一层的override方法，也就是DerivedClass这一层。
 //总结：
 //当有多层继承，且使用基类引用子类实例时：
 //1. 当用调用override成员时：override具有传染性，实际会调用最后一层子类的override成员；
@@ -76,12 +77,12 @@ sdcv2.Print(); //使用new重写virtual成员时，当有多层继承，使用�
 #endregion
 
 #region 抽象类：abstract
-//抽象类用abstract标识，表示该类必须被继承，且其中的抽象成员必须被子类实现（除非该子类也是抽象类）。
-//1.抽象类只能被用于其他类的基类；2.抽象类可以派生自另一个抽象类；3.字段和常量不能声明为abstract。
-//AbClass abClass = new AbClass(); //错误，抽象类不能被实例化。
-TheDerivedClass theDerivedClassInstance = new TheDerivedClass();
-theDerivedClassInstance.IdentifyBase();
-theDerivedClassInstance.IdentifyDerived();
+////抽象类用abstract标识，表示该类必须被继承，且其中的抽象成员必须被子类实现（除非该子类也是抽象类）。
+////1.抽象类只能被用于其他类的基类；2.抽象类可以派生自另一个抽象类；3.字段和常量不能声明为abstract。
+////AbClass abClass = new AbClass(); //错误，抽象类不能被实例化。
+//TheDerivedClass theDerivedClassInstance = new TheDerivedClass();
+//theDerivedClassInstance.IdentifyBase();
+//theDerivedClassInstance.IdentifyDerived();
 #endregion
 
 #region 多态总结
@@ -89,25 +90,34 @@ theDerivedClassInstance.IdentifyDerived();
 //2.实例的函数成员的具体行为，取决于的最新override版本。
 #endregion
 
+//SOLID
 #region 开闭原则(open principle)：除非是因为改bug，否则不要因为业务增加而修改某一个类，即将稳定的，不变的功能封装成类，将不确定的功能封装成抽象成员/抽象类，留给子类去实现。
 //基于开闭原则，基类中的virtual方法只需要声明，具体的实现，由子类去完成，当业务拓展，需要写新的子类时，只需要写新的override方法就可以，无需更改基类的方法。
 //当一个抽象类中所有的成员都是抽象成员的时候，这个类就被更改为interface接口。因此在interface中，只需要声明抽象成员即可，而实现了某一个接口的类，则需要
 //实现其抽象成员（如果只实现一部分抽象成员，则该类依然是一个abstract类）。由于interface的作用是需要被其他类实现，因此interface里所有成员都是public，
 //且不能有字段，只能有属性和方法。
-//通常讲：继承了某个类；实现了某些接口（一个类可以实现多个接口）。
-IVechicle theCar = new TheCar();
-theCar.Refill(300);
-Console.WriteLine(theCar.GetGas());
-theCar.Run(10);
-Console.WriteLine(theCar.GetGas());
-((ICommodity)theCar).Price = 1000; //商品属性被抽象成一个ICommodity接口，只要实现了该接口的类，都可以具有所有的商品属性。
-Console.WriteLine(((ICommodity)theCar).Price);
+//通常讲：类继承了某个类；类实现了某些接口（一个类可以实现多个接口）。
+//IVechicle theCar = new TheCar();
+//theCar.Refill(300);
+//Console.WriteLine(theCar.GetGas());
+//theCar.Run(10);
+//Console.WriteLine(theCar.GetGas());
+//((ICommodity)theCar).Price = 1000; //商品属性被抽象成一个ICommodity接口，只要实现了该接口的类，都可以具有所有的商品属性。
+//Console.WriteLine(((ICommodity)theCar).Price);
 #endregion
 
+#region interface
+IVechicle car = new TheCar();
+car.Refill(120);
+Console.WriteLine(car.GetGas());
+car.Run(10);
+Console.WriteLine(car.GetGas());
+Console.WriteLine(((ICommodity)car).Price);
+#endregion
 
 /// <summary>
 /// 注意：
-/// 1. private类不能作为base class; 2.c#中一个类只能有一个基类； 3.子类的访问级别不能超过父类；
+/// 1.private类不能作为base class; 2.c#中一个类只能有一个基类； 3.子类的访问级别不能超过父类；
 /// 4.子类拥有父类的所有成员(public字段、public属性、public方法)
 /// 5.子类可以覆盖父类的成员。
 /// 6.子类可以在父类成员的基础上添加成员。
@@ -150,9 +160,9 @@ public class Car : Vechicle
     /// Car构造函数通过base()方法，直接调用父类Vechicle的构造函数，可以在构造函数中重写。
     /// </summary>
     /// <param name="wheelsNum"></param>
-    public Car(int wheelsNum) : base(wheelsNum)
+    public Car(int wheelsNum): base(wheelsNum)
     {
-        //WheelsNum = wheelsNum + 2; //如果不需要重写，留空。
+        WheelsNum = wheelsNum + 2; //如果不需要重写，留空。
     }
 
     public void Refill(int value) //在基类成员基础上添加新的成员方法。
@@ -243,7 +253,6 @@ abstract public class AbClass
         {
             Console.WriteLine(this.GetType().BaseType?.FullName);
         }
-
     }
 
     /// <summary>
@@ -277,7 +286,6 @@ interface ICommodity
 {
     public int Price {  get; set; }
 }
-
 
 class TheCar : IVechicle, ICommodity
 {
@@ -345,4 +353,3 @@ class TheCar : IVechicle, ICommodity
         Speed += 1;
     }
 }
-

@@ -34,29 +34,32 @@
 #endregion
 
 #region Quiz6:前n项和
-//dynamic res;
 //var Sol6Obj = new Sol6();
-//if (Sol6Obj.SumOfFirstNs([3, 2, 3], 100, out res))
+//if (Sol6Obj.SumOfFirstNs([3, 2, 3], 2, out dynamic res))
 //    Console.WriteLine($"Result is {res}");
 //else
 //    Console.WriteLine(res);
 #endregion
 
 #region Quiz7:反转List
-//try
-//{
-//    //调用ReverseAList
-//    Console.WriteLine(string.Join(",", Sol7.ReverseAList(["Peter", "Syd", "ButterFly", "Shit"], 1, 2)));
-//    //调用ReverseAListLinq
-//    Console.WriteLine(string.Join(",", new List<string> { "Peter", "Syd", "ButterFly", "Shit" }.ReverseAListLinq(1, 2)));
-//}
-//catch (Exception ex)
-//{
-//    Console.WriteLine(ex.Message); ;
-//}
+try
+{
+    List<string> list = ["Peter", "Syd", "ButterFly", "Shit"];
+    list.Reverse();
+    //调用ReverseAList
+    var res1 = Sol7.ReverseAList(list, 1, 2);
+    Console.WriteLine(string.Join(",", res1));
+    //调用ReverseAListLinq
+    var res2 = list.ReverseAListLinq(1, 2);
+    Console.WriteLine(string.Join(",", res2));
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message); ;
+}
 #endregion
 
 #region Quiz8:
-var Sol8 = new Sol8();
-Sol8.Run();
+//var Sol8 = new Sol8();
+//Sol8.Run();
 #endregion

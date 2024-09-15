@@ -1,7 +1,7 @@
 ﻿namespace Solutions
 {
     //Quiz7:
-    //反转一个List<T>，用户可以自定义需要反转的范围，例如输入0,2，表示只对index在[1,3]的sublist进行反转，其余部分不变；如果只
+    //反转一个List<T>，用户可以自定义需要反转的范围，例如输入0,2，表示只对index在[0,2]的sublist进行反转，其余部分不变；如果只
     //输入一个List<T>，那么将所有内容反转。
     public static class Sol7
     {
@@ -16,6 +16,7 @@
         {
             return _ReverseAList(input, 0, input.Count - 1);
         }
+
         /// <summary>
         /// Use in the static function way. Reverse the whole input list.
         /// </summary>
@@ -71,7 +72,6 @@
             }
             catch (Exception)
             {
-
                 throw; ;
             }
             
