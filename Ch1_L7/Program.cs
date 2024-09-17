@@ -1,5 +1,5 @@
 ﻿//结构体、枚举、数组、枚举器和迭代器
-
+using System.Collections;
 #region struct和class：struct是值类型，不能派生其他结构；class是引用类型，可以派生其他类
 //struct存在栈中，而class的引用存在栈中，内部的值类型成员存放在栈中，引用类型成员存放在堆中，其引用存放在栈中。
 //struct有隐藏的无参构造，且无法被显示覆盖。程序员可以提供其他的有参构造。
@@ -134,34 +134,98 @@
 #endregion
 
 #region 交错数组(Jagged Array)：不同维度的数组元素个数可以不同。
-int[][] jagArr1 = new int[3][];
-jagArr1[0] = [1, 2, 3];
-jagArr1[1] = [1, 2, 3,4];
-jagArr1[2] = [1, 2];
+//int[][] jagArr1 = new int[3][];
+//jagArr1[0] = [1, 2, 3];
+//jagArr1[1] = [1, 2, 3,4];
+//jagArr1[2] = [1, 2];
 
-int[][] jagArr2 =
-[
-    [1, 3, 5, 7, 9],
-    [0, 2, 4, 6],
-    [11, 22]
-];
-jagArr2[0][1] = 77;
+//int[][] jagArr2 =
+//[
+//    [1, 3, 5, 7, 9],
+//    [0, 2, 4, 6],
+//    [11, 22]
+//];
+//jagArr2[0][1] = 77;
 
-int[][,] jagArr3 =
-[
-    new int[,] { {1,3}, {5,7} },
-    new int[,] { {0,2}, {4,6}, {8,10} },
-    new int[,] { {11,22}, {99,88}, {0,9} }
-];
-Console.WriteLine("{0}", jagArr3[0][1, 0]);
-Console.WriteLine(jagArr3.Length);
+//int[][,] jagArr3 =
+//[
+//    new int[,] { {1,3}, {5,7} },
+//    new int[,] { {0,2}, {4,6}, {8,10} },
+//    new int[,] { {11,22}, {99,88}, {0,9} }
+//];
+//Console.WriteLine("{0}", jagArr3[0][1, 0]);
+//Console.WriteLine(jagArr3.Length);
 #endregion
 
 #region 枚举器：Enumerator
+//实现了IEnumerable接口的类，可以使用for loop或foreach语句去循环遍历，原因是其中的GetEnumerator()方法返回一个枚举器，枚举器可以依次返回集合中的一个对象。
+//实现了GetEnumerator()方法的类，称为可枚举类型IEnumerable。
+//Enumerator：枚举器
+//IEnumerable：可枚举类型
+//两者的关系为：Enumerator = IEnumerable.GetEnumerator()。
+//Enumerator具有三个成员：Current属性、MoveNext方法、Reset方法。
+//Current：只读属性，返回序列中当前位置的元素。
+//MoveNext：把枚举器的位置前进到序列中的下一项；返回bool值，指示新的位置是否越界。枚举器的初始位置是第一项之前，因此在第一次使用Current前，需要先调用一次MoveNext。
+//Reset：把序列的位置重置为初始位置。
+
+//使用GetEnumerator()方法获取Enumerator，并使用迭代器实现ForEach：
+
+//int[] arr = [10, 2, 3, 12, 2, 3];
+
+//foreach (int i in arr)
+//    Console.Write(i + " ");
+
+//Console.WriteLine();
+
+//IEnumerator enumerator = arr.GetEnumerator();
+//while (enumerator.MoveNext())
+//{
+//    int item = (int)enumerator.Current;
+//    Console.Write(item + " ");
+//}
+#endregion
+
+#region 在类中实现IEnumerator和IEnumerable。
+//1.创建一个枚举器，即写一个类，实现IEnumerator接口。
+//2.创建一个类，实现IEnumerable接口，在其中的GetEnumerator()方法中，返回自己写的枚举器。这个类就可以和List或Array一样使用ForEach去遍历了。
+//RainBowV1 rainBowV1 = new RainBowV1();
+//Console.WriteLine();
+//foreach (string color in rainBowV1)
+//    Console.Write(color + " ");
 #endregion
 
 #region 迭代器：Iterator，通过yield return生成Enumerator; Python中叫生成器(Generator)。
+//无需实现IEnumerator中的属性和方法即可生成Enumerator。
+//RainBowV2 rainBowV2 = new RainBowV2();
+//Console.WriteLine();
+//foreach (string color in rainBowV2)
+//    Console.Write(color + " ");
 #endregion
+
+#region 迭代器：yield return本质是延迟执行(延迟计算)，只有需要获取计算结果时，才执行yield return语句。
+//假设有一个集合，里面有无限的元素，如果需要遍历这个集合，传统方法是将这个集合全部放在内存中，然后使用指针去内存遍历；
+//但内存是有限的，无限个元素实际上无法被放到内存里，这时就需要延迟计算，即只有当遍历到某个元素时，才将去计算它并存放在内存中，然后再去遍历它，
+//集合中没有被遍历到的元素，都不需要提前计算好存入内存。这样即使有一个很大的集合，也不需要在实际需要某个元素之前，就把集合整体都存放在内存中，从而节省内存。
+//使用return遍历斐波那契数列：
+//运行后打开Task Manager，会发现内存使用量很快到100%且电脑可能会因此卡住。这是因为List过大将内存占满了。注意观察内存使用情况，及时关闭程序！！！！
+//foreach (long i in FibonacciV1(99999999999999))
+//    Console.WriteLine(i + " ");
+
+//使用yield return编列斐波那契数列：
+//发现内存占用并没有明显升高，程序运行正常
+//注意不要使用下面这种方式去接收，这和前面使用List一样，会将集合全部存在变量fibov2中，失去了使用yield return的作用。
+//var fibov2 = PrintFibonacciV2(99999999999999); 
+foreach (long i in FibonacciV2(99999999999999))
+{
+    //可以在一个遍历一个无限序列时加入一些判断逻辑，当符合逻辑时，跳出遍历。
+    //if (i > 1000)
+    //{
+    //    break;
+    //}
+    Console.WriteLine(i + " ");
+}
+#endregion
+
 static void ReturnAStructWithOut(StructSample input, out StructSample output)
 {
     input.X = 100;
@@ -180,6 +244,38 @@ static void UpdateAStruct(StructSample ss1)
 {
     ss1.X = 400;
     ss1.Y = 500;
+}
+
+//使用List去保存生成的数据，Bad practice。
+static List<long> FibonacciV1(long n)
+{
+    List< long> temp = new List<long>();
+    long current = 0;
+    long next = 1;
+    while (n > 0 )
+    {
+        temp.Add(current);
+        long oldCurrent = current;
+        current = next;
+        next = next + oldCurrent;
+        n--;
+    }
+    return temp;
+}
+
+//使用yield return生成前n项斐波那契，Good practice。
+static IEnumerable<long> FibonacciV2(long n)
+{
+    long current = 0;
+    long next = 1;
+    while (n > 0)
+    {
+        yield return current;
+        long oldCurrent = current;
+        current = next;
+        next = next + oldCurrent;
+        n--;
+    }
 }
 
 class A
@@ -291,4 +387,70 @@ enum TrafficLightLong : long
     Green,
     Red = 5,
     Yellow
+}
+
+/// <summary>
+/// 实现了IEnumerator的类即为枚举器，具体需要实现Current属性、MoveNext方法和Reset方法。
+/// </summary>
+class ColorEnumerator : IEnumerator
+{
+    private string[] _colors = null!;
+    int position = -1; //当前位置初始化为-1。
+
+    public ColorEnumerator(string[] colors)
+    {
+        _colors = colors;
+    }
+
+    public object Current
+    {
+        get
+        {
+            if (position == -1)
+                throw new InvalidOperationException();
+            if (position > _colors.Length)
+                throw new InvalidOperationException();
+            return _colors[position];
+        }
+    }
+
+    public bool MoveNext()
+    {
+        if (position < _colors.Length - 1)
+        {
+            position++;
+            return true;
+        }
+        return false;
+    }
+
+    public void Reset()
+    {
+        position = -1;
+    }
+}
+
+/// <summary>
+/// 实现了IEnumerable的类可以通过GetEnumerator()方法返回一个枚举器，从而使用ForEach去遍历。
+/// </summary>
+class RainBowV1 : IEnumerable
+{
+    string[] _colors = ["violet", "blue", "cyan", "green", "yellow", "orange", "red"];
+    public IEnumerator GetEnumerator()
+    {
+        return new ColorEnumerator(_colors);
+    }
+}
+
+/// <summary>
+/// 在使用GetEnumerator()中使用yield return方法返回IEnumerator，无需先写一个实现了IEnumerator的类了。
+/// </summary>
+class RainBowV2 : IEnumerable
+{
+    string[] _colors = ["violet", "blue", "cyan", "green", "yellow", "orange", "red"];
+    public IEnumerator GetEnumerator()
+    {
+        foreach (var item in _colors)
+            yield return item;
+    }
 }
