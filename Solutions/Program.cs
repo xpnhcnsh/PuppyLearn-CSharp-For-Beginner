@@ -59,7 +59,17 @@ catch (Exception ex)
 }
 #endregion
 
-#region Quiz8:
-//var Sol8 = new Sol8();
-//Sol8.Run();
+#region Quiz8:修改最大值
+int[] foo = [6, 3, 1, 3, 56, 3, 1, 3, 100, 94];
+ref int max = ref Sol8.FindMax(foo);
+max = 0;
+foreach (int i in foo)
+{
+    Console.Write($"{i} ");
+}
+#endregion
+
+#region Quiz9:
+//var Sol9 = new Sol9();
+//Sol9.Run();
 #endregion

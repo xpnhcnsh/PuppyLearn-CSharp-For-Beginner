@@ -23,6 +23,11 @@
 //输入一个List<T>，那么将所有内容反转。
 
 //Quiz8:
+//有一个int[] foo = [6, 3, 1, 3, 56, 3, 1, 3, 100, 94]
+//写一个方法，找到其最大值，调用这个方法返回其最大值并用一个变量接收，修改这个变量的值为0，使这个array中的最大值这一位也变成0。
+//注意：不能直接通过index修改，例如不能使用：foo[8] = 0;
+
+//Quiz9:
 //MyUtlities是一个Class Library， 其中有两个文件：MyClass.cs中定义了Student和MyClass两个类，其中MyClass类有一个
 //静态方法，可以生成一个默认的MyClass对象，其中有5个学生；而MyDelegates.cs文件中声明了3个委托。仔细阅读MyClass.cs和MyDelegates.cs两个文件，
 //查看MyClass类中需要用到哪些委托去计算其属性，然后在自己的Sol8.cs中，利用MyClass.cs和MyDelegates.cs实现：1.使用静态方法创建一个班级；
