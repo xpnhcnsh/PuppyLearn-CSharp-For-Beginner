@@ -12,11 +12,13 @@ Action Act = new Action(Cal.Version); //传入的是需要调用的函数的地�
 Cal.Version(); //直接调用
 Act.Invoke(); //间接调用
 Act(); //简写
+Action<string> Act2 = Cal.ShowName;
+Act2("卡西欧");
 #endregion
 
 #region Func: Has return value
 //Func<int, int, int> func1 = new Func<int, int, int>(Cal.Add);
-//Func<int, int, int> func2 = new Func<int, int, int>(Cal.Sub);
+//Func<int, int, int> func2 = Cal.Sub;
 //int x = 100;
 //int y = 200;
 //int z = 0;
@@ -38,40 +40,38 @@ Act(); //简写
 //z = cal1.Invoke(x, y);
 //z = cal1(x, y);
 //z = cal2.Invoke(x, y);
-
-//public delegate int CalcDelegate(int x, int y); //自定义一个委托，返回值为int，接受两个int作为参数。注意：委托本身也是一个类。
 #endregion
 
 #region 委托的使用场景
-//1.模板方法：通常委托有返回值；位于代码中部；相当于方法的占位符，在某个方法中，需要处理数据的逻辑不确定，需要在调用该方法时才能确定究竟要如何处理数据。
-//2.回调(callback)方法：委托无返回值；位于代码尾部。
+////1.模板方法：通常委托有返回值；位于代码中部；相当于方法的占位符，在某个方法中，需要处理数据的逻辑不确定，需要在调用该方法时才能确定究竟要如何处理数据。
+////2.回调(callback)方法：委托无返回值；位于代码尾部。
 //ProductFactory productFactory = new ProductFactory();
 //WrapFactory wrapFactory = new WrapFactory();
 //Logger logger = new Logger();
 
-//作者B在这里封装委托
+////作者B在这里封装委托
 //Func<Product> func1 = new Func<Product>(productFactory.MakePizza);
 //Func<Product> func2 = new Func<Product>(productFactory.MakeToyCar);
 //Action<Product> log = new Action<Product>(logger.Log);
 
-//作者B调用作者A写的wrapFactory.WrapProduct方法，其中的参数都是作者B自己实现的。
+////作者B调用作者A写的wrapFactory.WrapProduct方法，其中的参数都是作者B自己实现的。
 //Box box1 = wrapFactory.WrapProduct(func1, log);
 //Box box2 = wrapFactory.WrapProduct(func2, log);
 
 //Console.WriteLine($"{box1.Product.Name},\n{box2.Product.Name}");
 
-//以上作者A和B的写作过程，实现了解耦。通常作者A的工作，是实现一个框架，而作者B的工作，是使用该框架实现具体的功能。
+////以上作者A和B的写作过程，实现了解耦。通常作者A的工作，是实现一个框架，而作者B的工作，是使用该框架实现具体的功能。
 
 
-//另一个例子：
-//框架作者写一个GotoStation()方法，第一步：买票；第二步；去车站；第三步：坐车。
-//作为框架的作者，定义了第一步和第三步的具体方法，但第二步由使用框架的人自己去实现。
+////另一个例子：
+////框架作者写一个GotoStation()方法，第一步：买票；第二步；去车站；第三步：坐车。
+////作为框架的作者，定义了第一步和第三步的具体方法，但第二步由使用框架的人自己去实现。
 //void GotoStation(Action Step2)
 //{
 //    Console.WriteLine();
-//    Step1();
-//    Step2.Invoke();
-//    Step3();
+//Step1();
+//Step2.Invoke();
+//Step3();
 //}
 
 //void Step1()
@@ -104,14 +104,14 @@ Act(); //简写
 //Action byCar = new Action(() => Console.WriteLine("go to station by car..."));
 //GotoStation(byCar);
 
-//使用过程中，用户A和B不需要关心step1和step3的实现，之需要自己实现step2的方法即可。
-//而框架使用者不需要关心step2，只需要提前实现好step1和step3即可。
+////使用过程中，用户A和B不需要关心step1和step3的实现，之需要自己实现step2的方法即可。
+////而框架使用者不需要关心step2，只需要提前实现好step1和step3即可。
 #endregion
 
 #region 多播委托：Multicast Delegate，一个委托中传入多个方法。
-//Student stu1 = new Student() { Id = 1, PenColor=ConsoleColor.Green};
-//Student stu2 = new Student() { Id = 2, PenColor=ConsoleColor.Blue};
-//Student stu3 = new Student() { Id = 3, PenColor=ConsoleColor.Red};
+//Student stu1 = new Student() { Id = 1, PenColor = ConsoleColor.Green };
+//Student stu2 = new Student() { Id = 2, PenColor = ConsoleColor.Blue };
+//Student stu3 = new Student() { Id = 3, PenColor = ConsoleColor.Red };
 
 //Action act1 = new Action(stu1.DoHomeWork);
 //Action act2 = new Action(stu2.DoHomeWork);
@@ -124,6 +124,52 @@ Act(); //简写
 ////act1是一个多播委托；执行顺序和封装顺序一致。
 //act1 += act3 += act2;
 //act1.Invoke();
+//act1 -= act3;
+//act1();
+
+//如果一个多播委托具有参数，那么里面的每个方法都传入相同的参数。
+//如果一个多播委托具有返回值，那么只会返回最后一个方法的返回值，前面的返回值会被忽略。
+
+//如果多播委托的参数是引用参数，那么调用列表中的方法传入的参数是上一个方法修改后的引用参数，而不是原始的引用参数。
+//DelWithRefPara cascadingAddRef = AddBy3Ref;
+//cascadingAddRef += AddBy2Ref;
+//int a = 1;
+//cascadingAddRef(ref a);
+//Console.WriteLine(a);
+
+//Action<int> cascadingAdd = AddBy3;
+//cascadingAdd += AddBy2;
+//int b = 1;
+//cascadingAdd(b);
+//Console.WriteLine(b);
+
+//void AddBy3Ref(ref int x)
+//{
+//    x += 3;
+//}
+
+//void AddBy2Ref(ref int x)
+//{
+//    x += 2;
+//}
+//void AddBy3(int x)
+//{
+//    x += 3;
+//}
+
+//void AddBy2(int x)
+//{
+//    x += 2;
+//}
+#endregion
+
+#region Lambda表达式：如果一个方法只调用一次，无需声明该方法，使用lambda表达式更简便。=>读作：goes to
+//使用Lambda表达式重写AddBy2Ref和AddBy3Ref方法：
+//DelWithRefPara cascadingAddRef = (ref int x) => { x += 2; }; //AddBy2Ref
+//cascadingAddRef += (ref int x) => { x += 3; }; //AddBy3Ref
+//int a = 1;
+//cascadingAddRef(ref a);
+//Console.WriteLine(a);
 #endregion
 
 #region 使用Interface替代delegate。
@@ -186,6 +232,11 @@ class Calculator
         Console.WriteLine("Version: v1.01");
     }
 
+    public void ShowName(string name)
+    {
+        Console.WriteLine($"Name: {name}");
+    }
+
     public int Add(int a, int b)
     {
         return a + b;
@@ -196,6 +247,10 @@ class Calculator
         return a - b;
     }
 }
+
+public delegate int CalcDelegate(int x, int y); //自定义一个委托类型，返回值为int，接受两个int作为参数。注意：委托本身也是一个类。
+
+delegate void DelWithRefPara(ref int x);
 
 class Logger
 {
