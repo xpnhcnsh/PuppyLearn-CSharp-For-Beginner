@@ -42,34 +42,41 @@
 #endregion
 
 #region Quiz7:反转List
-try
-{
-    List<string> list = ["Peter", "Syd", "ButterFly", "Shit"];
-    list.Reverse();
-    //调用ReverseAList
-    var res1 = Sol7.ReverseAList(list, 1, 2);
-    Console.WriteLine(string.Join(",", res1));
-    //调用ReverseAListLinq
-    var res2 = list.ReverseAListLinq(1, 2);
-    Console.WriteLine(string.Join(",", res2));
-}
-catch (Exception ex)
-{
-    Console.WriteLine(ex.Message); ;
-}
+//try
+//{
+//    List<string> list = ["Peter", "Syd", "ButterFly", "Shit"];
+//    list.Reverse();
+//    //调用ReverseAList
+//    var res1 = Sol7.ReverseAList(list, 1, 2);
+//    Console.WriteLine(string.Join(",", res1));
+//    //调用ReverseAListLinq
+//    var res2 = list.ReverseAListLinq(1, 2);
+//    Console.WriteLine(string.Join(",", res2));
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine(ex.Message); ;
+//}
 #endregion
 
 #region Quiz8:修改最大值
-int[] foo = [6, 3, 1, 3, 56, 3, 1, 3, 100, 94];
-ref int max = ref Sol8.FindMax(foo);
-max = 0;
-foreach (int i in foo)
-{
-    Console.Write($"{i} ");
-}
+//int[] foo = [6, 3, 1, 3, 56, 3, 1, 3, 100, 94];
+//ref int max = ref Sol8.FindMax(foo);
+//max = 0;
+//foreach (int i in foo)
+//{
+//    Console.Write($"{i} ");
+//}
 #endregion
 
-#region Quiz9:
+#region Quiz9:委托基本使用
 //var Sol9 = new Sol9();
 //Sol9.Run();
+#endregion
+
+#region Quiz10:自定义sort方法
+var roster = new Roster([new Student(1, 21, 180), new Student(4, 22, 165), new Student(3, 23, 175)]);
+roster.Sort(x=>x.Id);
+foreach (Student s in roster.Value)
+    Console.WriteLine(s);
 #endregion

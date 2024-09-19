@@ -174,6 +174,7 @@ Act2("卡西欧");
 
 #region 使用Interface替代delegate。
 ////delegate使用不当会造成内存泄露或性能下降，如果要实现协作，可以使用Interface替代。
+////但interface不如delegate灵活，实际工作中，更多的是使用lambda表达式去实现委托。
 ////下面使用Interface重构ProductFactory
 //IProductFactory PizzFactory = new PizzaFactory();
 //IProductFactory ToyCarFactory = new ToyCarFactory();

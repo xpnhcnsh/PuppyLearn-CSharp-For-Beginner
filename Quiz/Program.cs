@@ -37,3 +37,9 @@
 //BFR计算公式为：
 //男生：1.2 * BMI + 0.23 * Age - 5.4 - 10.8 * 1
 //女生：1.2 * BMI + 0.23 * Age - 5.4 - 10.8 * 0
+
+//Quiz10:
+//写一个Student类，具有Id，Age和Height属性，均为int类型。
+//Roster类，具有一个属性/字段，其为Student类的一个集合；该类还有一个Sort扩展方法，其接受一个委托参数Func<Student, int> myRule，
+//该参数可自定义Roster对象中集合成员排序的规则，例如，如果myRule指定使用Age排序，那么调用Sort方法就会使Roster对象内部集合根据Age属性排序。Sort方法是一个inplace方法。
+//注意：在Sort方法内部，可以使用Linq自带的OrderBy方法。如果不想使用OrderBy方法，需要自己写排序算法。
