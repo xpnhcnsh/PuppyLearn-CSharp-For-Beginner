@@ -136,7 +136,7 @@ using System.Collections;
 #region 交错数组(Jagged Array)：不同维度的数组元素个数可以不同。
 //int[][] jagArr1 = new int[3][];
 //jagArr1[0] = [1, 2, 3];
-//jagArr1[1] = [1, 2, 3,4];
+//jagArr1[1] = [1, 2, 3, 4];
 //jagArr1[2] = [1, 2];
 
 //int[][] jagArr2 =
@@ -215,15 +215,15 @@ using System.Collections;
 //发现内存占用并没有明显升高，程序运行正常
 //注意不要使用下面这种方式去接收，这和前面使用List一样，会将集合全部存在变量fibov2中，失去了使用yield return的作用。
 //var fibov2 = PrintFibonacciV2(99999999999999); 
-foreach (long i in FibonacciV2(99999999999999))
-{
-    //可以在一个遍历一个无限序列时加入一些判断逻辑，当符合逻辑时，跳出遍历。
-    //if (i > 1000)
-    //{
-    //    break;
-    //}
-    Console.WriteLine(i + " ");
-}
+//foreach (long i in FibonacciV2(99999999999999))
+//{
+//    //可以在一个遍历一个无限序列时加入一些判断逻辑，当符合逻辑时，跳出遍历。
+//    //if (i > 1000)
+//    //{
+//    //    break;
+//    //}
+//    Console.WriteLine(i + " ");
+//}
 #endregion
 
 static void ReturnAStructWithOut(StructSample input, out StructSample output)

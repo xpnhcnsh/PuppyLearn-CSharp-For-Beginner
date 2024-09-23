@@ -1,5 +1,4 @@
 ﻿//泛型：泛型类、泛型方法、泛型结构、泛型委托、泛型接口、协变和逆变
-using System;
 using System.Collections;
 
 #region 泛型：将类型参数化(type-parameterized)，使用类型占位符写代码，在创建实例时才指明真实的类型。
