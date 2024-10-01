@@ -1,7 +1,5 @@
 ﻿//类：继承、多态、抽象类与开闭原则、接口
 
-using System;
-
 #region 继承：类在功能上的拓展
 //Type t = typeof(Car);
 //Console.WriteLine(t.BaseType.FullName);
@@ -16,7 +14,7 @@ using System;
 //Console.WriteLine($"{car is Vechicle}   {car is Object}  {car is Car}");
 #endregion
 
-#region public, protected, private, internal, protected internal
+#region 高 -> public, protected internal, protected, internal, private -> 低
 //1.默认成员的访问级别是private。
 //2.派生类的访问级别不能比基类高。即如果基类是protected级别，那么子类只能是protected或private级别，不能是public。
 //3.成员的访问级别不能比类高。即如果类是protected级别，那么成员只能是protected或private级别，不能是public。
@@ -41,15 +39,15 @@ using System;
 ////baseClass.C = 10; //error
 //DerivedClass derivedClass = new DerivedClass();
 //derivedClass.A = 20;
-////derivedClass.B = 20; //error，只能在DerivedClass类内部访问到base.B。
-////derivedClass.C = 10; //error
+//derivedClass.B = 20; //error，只能在DerivedClass类内部访问到base.B。
+//derivedClass.C = 10; //error
 #endregion
 
 #region 多态(polymorphism)：使用父类引用子类实例(子类拥有父类的所有成员(字段、属性、方法))
-//Vechicle v1 = new Car(2);
+Vechicle v1 = new Car(1);
 
 //Console.WriteLine(v1.WheelsNum);
-////Console.WriteLine(v1.GetGas()); //基类引用后，无法访问子类成员。
+//Console.WriteLine(v1.GetGas()); //基类引用后，无法访问子类成员。
 //Car c1 = new Car(2);
 //Console.WriteLine(c1.WheelsNum);
 
@@ -66,8 +64,8 @@ using System;
 
 #region 对比virtual和new：虚成员vs子类对父类成员的隐藏
 //new和override都可以对virtual成员进行重写/覆盖；override会覆盖所有上层的父类直至基类；new只覆盖一层父类。
-//BaseClass sdcv1 = new SecondDerivedClassV1();
-//BaseClass sdcv2 = new SecondDerivedClassV2();
+BaseClass sdcv1 = new SecondDerivedClassV1();
+BaseClass sdcv2 = new SecondDerivedClassV2();
 //sdcv1.Print(); //使用override重写virtual成员时，当有多层继承，使用基类引用子类实例，调用override方法实际调用了最新的override方法。
 //sdcv2.Print(); //使用new重写virtual成员时，当有多层继承，使用基类引用子类实例，调用new方法实际调用了最后一层的override方法，也就是DerivedClass这一层。
 //总结：
@@ -76,10 +74,10 @@ using System;
 //2. 当调用new成员时：实际会调用基类的对应成员（如果基类的该成员，在后续的子类中有该成员对应的override成员，那么调用最后一层子类的override成员）。
 #endregion
 
-#region 抽象类：abstract
+#region 抽象类：abstract class <-> 实体类 concrete class
 ////抽象类用abstract标识，表示该类必须被继承，且其中的抽象成员必须被子类实现（除非该子类也是抽象类）。
 ////1.抽象类只能被用于其他类的基类；2.抽象类可以派生自另一个抽象类；3.字段和常量不能声明为abstract。
-////AbClass abClass = new AbClass(); //错误，抽象类不能被实例化。
+//AbClass abClass = new AbClass(); //错误，抽象类不能被实例化。
 //TheDerivedClass theDerivedClassInstance = new TheDerivedClass();
 //theDerivedClassInstance.IdentifyBase();
 //theDerivedClassInstance.IdentifyDerived();
@@ -91,12 +89,15 @@ using System;
 #endregion
 
 //SOLID
-#region 开闭原则(open principle)：除非是因为改bug，否则不要因为业务增加而修改某一个类，即将稳定的，不变的功能封装成类，将不确定的功能封装成抽象成员/抽象类，留给子类去实现。
+#region 开闭原则(Open principle)：对扩展开放，对修改封闭；除非是因为改bug，否则不要因为业务增加而修改某一个类，即将稳定的，不变的功能封装成类，将不确定的功能封装成抽象成员/抽象类，留给子类去实现。
 //基于开闭原则，基类中的virtual方法只需要声明，具体的实现，由子类去完成，当业务拓展，需要写新的子类时，只需要写新的override方法就可以，无需更改基类的方法。
-//当一个抽象类中所有的成员都是抽象成员的时候，这个类就被更改为interface接口。因此在interface中，只需要声明抽象成员即可，而实现了某一个接口的类，则需要
+//当一个抽象类中所有的成员都是抽象/虚成员的时候，这个类就被更改为interface接口。因此在interface中，只需要声明抽象成员即可，而实现了某一个接口的类，则需要
 //实现其抽象成员（如果只实现一部分抽象成员，则该类依然是一个abstract类）。由于interface的作用是需要被其他类实现，因此interface里所有成员都是public，
 //且不能有字段，只能有属性和方法。
 //通常讲：类继承了某个类；类实现了某些接口（一个类可以实现多个接口）。
+#endregion
+
+#region interface
 //IVechicle theCar = new TheCar();
 //theCar.Refill(300);
 //Console.WriteLine(theCar.GetGas());
@@ -104,15 +105,6 @@ using System;
 //Console.WriteLine(theCar.GetGas());
 //((ICommodity)theCar).Price = 1000; //商品属性被抽象成一个ICommodity接口，只要实现了该接口的类，都可以具有所有的商品属性。
 //Console.WriteLine(((ICommodity)theCar).Price);
-#endregion
-
-#region interface
-IVechicle car = new TheCar();
-car.Refill(120);
-Console.WriteLine(car.GetGas());
-car.Run(10);
-Console.WriteLine(car.GetGas());
-Console.WriteLine(((ICommodity)car).Price);
 #endregion
 
 /// <summary>
@@ -152,7 +144,7 @@ public class Vechicle
 
 public class Car : Vechicle
 {
-    public new int WheelsNum; //隐藏基类成员字段，注意使用new关键字。
+    public new int WheelsNum = 4; //隐藏基类成员字段，注意使用new关键字。
     private int _gasTank = 50; //在基类成员基础上添加新的成员字段。
     private readonly int _gcr = 2; //gas comsumption ratio
 
@@ -160,7 +152,7 @@ public class Car : Vechicle
     /// Car构造函数通过base()方法，直接调用父类Vechicle的构造函数，可以在构造函数中重写。
     /// </summary>
     /// <param name="wheelsNum"></param>
-    public Car(int wheelsNum): base(wheelsNum)
+    public Car(int wheelsNum) : base(wheelsNum)
     {
         WheelsNum = wheelsNum + 2; //如果不需要重写，留空。
     }
@@ -204,7 +196,7 @@ public class BaseClass
 
 public class DerivedClass : BaseClass
 {
-    public override void Print()
+    public virtual void Print()
     {
         //base.B = B; //可以访问到protected级别的字段。
         //base.C = 20; //error，private级别只能在base内部访问。
@@ -244,7 +236,7 @@ abstract public class AbClass
     /// </summary>
     public void IdentifyBase()
     {
-        Type t = this.GetType();
+        Type t = this.GetType(); //this->实例化的对象
         if (t == typeof(AbClass))
         {
             Console.WriteLine(t);
@@ -345,7 +337,7 @@ class TheCar : IVechicle, ICommodity
     void IVechicle.Run(int distance)
     {
         GasTank -= distance * _gcr;
-        GasTank = GasTank <=0? 0: GasTank;
+        GasTank = GasTank <= 0 ? 0 : GasTank;
     }
 
     public void SpeedUp()

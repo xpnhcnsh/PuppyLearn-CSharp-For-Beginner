@@ -157,6 +157,7 @@ using System.Collections;
 //Console.WriteLine(jagArr3.Length);
 #endregion
 
+
 #region 枚举器：Enumerator
 //实现了IEnumerable接口的类，可以使用for loop或foreach语句去循环遍历，原因是其中的GetEnumerator()方法返回一个枚举器，枚举器可以依次返回集合中的一个对象。
 //实现了GetEnumerator()方法的类，称为可枚举类型IEnumerable。
