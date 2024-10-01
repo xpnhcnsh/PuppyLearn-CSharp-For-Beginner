@@ -3,6 +3,7 @@
 #region 多线程初识
 #region 多线程:线程是操作系统中能够独立运行的最小单位；线程是进程的一部分；main函数是一个进程的主线程入口，在主线程中，可以开启多个子线程。
 //开启两个线程，对count变量自增，当两个线程执行完毕后，count是多少？
+using MyUtilities;
 using System.Diagnostics;
 
 int count = 0;
@@ -252,6 +253,7 @@ int count = 0;
 //Console.WriteLine(task.Result);
 
 //更常见的开启一个任务的方法是使用await Task.Run()，使用await关键字后，会直接返回原本的返回值，例如这里返回的是string，而不是Task<string>：
+
 //Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 主线程");
 //var task2Res = await Task.Run(() =>
 //{
@@ -308,16 +310,19 @@ Stopwatch watch = Stopwatch.StartNew();
 //Console.WriteLine($"{watch.ElapsedMilliseconds}ms in total.");
 
 //使用WaitAll()并发执行所有任务，主线程阻塞在WaitAll()。
-List<Task<string>> tasks = new();
-for (int i = 0; i < 10; i++)
-{
-    tasks.Add(Task.Run(SearchAysnc));
-}
+//WhenAll()会返回所有任务执行的结果，WaitAll()无返回值。如果任务有返回值，使用WhenAll()，返回的Task对象也可以更好的监测任务状态。
+//List<Task<string>> tasks = new();
+//for (int i = 0; i < 10; i++)
+//{
+//    tasks.Add(Task.Run(SearchAysnc));
+//}
 //watch.Restart();
-//Task.WaitAll(tasks.ToArray()); //阻塞，但并发。
-////await Task.WhenAll(tasks); //或
+////Task.WaitAll(tasks.ToArray()); //阻塞，但并发。
+//var resArray = await Task.WhenAll(tasks); //或
 ////Task.WhenAll(tasks).Wait(); //或
 //watch.Stop();
+//foreach (var res in resArray)
+//    Console.WriteLine(res);
 
 //Console.WriteLine($"{watch.ElapsedMilliseconds}ms in total.");
 //foreach (var task in tasks)
@@ -337,17 +342,271 @@ static async Task<string> SearchAysnc()
     Random rnd = new();
     Stopwatch watch = Stopwatch.StartNew();
     await Task.Delay(rnd.Next(3000)); //注意：不要在async方法里使用阻塞！！！这里使用Task.Delay，而不是Thread.Sleep因为await Task.Delay会释放主线程去执行别的工作，
-                            //不会阻塞主线程，而Thread.Sleep会阻塞主线程，这样一来异步任务就没有意义了。
-    //Thread.Sleep(3000); //在console程序中，体现不出区别，如果是WPF或WinForm，Thread.Sleep会导致UI阻塞。因为这句之前的两行，依然是在UI线程中执行的
-                          //因此Thread.Sleep会使UI线程阻塞，只有在Thread.Sleep结束后，后面的两行代码才可能回到(也可能不回到，通过ConfigAwait(false)去配置，该配置在
-                          //Asp.net中无效，只在WinForm和WPF中生效。)UI线程去。而使用await执行耗时操作，可以确保await的任务使用新的线程执行，放开UI线程去
-                          //响应其他操作。（对于ASP.Net，则是放开web服务，相应其他用户的请求，而不会因为一个用户的好事请求阻塞整个web服务，从而提高并发量。）
+                                      //不会阻塞主线程，而Thread.Sleep会阻塞主线程，这样一来异步任务就没有意义了。
+                                      //Thread.Sleep(3000); //在console程序中，体现不出区别，如果是WPF或WinForm，Thread.Sleep会导致UI阻塞。因为这句之前的两行，依然是在UI线程中执行的
+                                      //因此Thread.Sleep会使UI线程阻塞，只有在Thread.Sleep结束后，后面的两行代码才可能回到(也可能不回到，通过ConfigAwait(false)去配置，该配置在
+                                      //Asp.net中无效，只在WinForm和WPF中生效。)UI线程去。而使用await执行耗时操作，可以确保await的任务使用新的线程执行，放开UI线程去
+                                      //响应其他操作。（对于ASP.Net，则是放开web服务，相应其他用户的请求，而不会因为一个用户的好事请求阻塞整个web服务，从而提高并发量。）
     watch.Stop();
     return $"[{Environment.CurrentManagedThreadId}]: {watch.ElapsedMilliseconds}"; //语法糖：这里只需返回string，无需返回Task<string>。
 }
 #endregion
 
-#region 使用CancellationToken取消任务
-//TBD
+#region 使用CancellationToken取消任务：CancellationTokenSource实现了IDisposable接口，使用using语句或在finally中使用cts.Dispose()否则会内存泄漏
+//所有的Async方法，都可以传入CancellationToken，建议在所有Async方法中，都传入这个参数。
+
+//使用cts.Cancel()主动结束任务。
+//using (CancellationTokenSource cts = new CancellationTokenSource())
+//{
+//var sw = Stopwatch.StartNew();
+//var cancelTask = Task.Run(async () =>
+//{
+//    await Task.Delay(3000);
+//    cts.Cancel(); //触发cts的Cancel行为。
+//});
+
+//try
+//{
+//    //下面的代码，运行两个任务，第一个任务在10秒后结束，传入了cts.Token；第二个任务会在3秒后触发cts.Cancel()，这个行为会被第一个任务捕捉到，因此第一个任务也会在3秒后结束。
+//    //Task.WhenAll()会在全部任务结束后返回，因此该任务总计需要3秒左右，而非10秒。
+//    //cts.Cancel()会触发TaskCanceledException，因此可以catch到该异常。
+//    //常用的场景是，多个异步任务，使用不同方法进行计算，其中一个任务完成后其他任务即可停止无需继续下去，这时给每个任务都传入cts.Token，并且在结束后都执行cts.Cancel()，
+//    //这样任意一个任务结束后，都会触发token的Cancel行为，其他任务都会被停止，无需浪费资源继续计算。
+//    await Task.WhenAll(Task.Delay(10000, cts.Token), cancelTask);
+//}
+//catch (TaskCanceledException ex)
+//{
+//    Console.WriteLine(ex);
+//}
+//Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms.");
+//}
+
+//使用Delay参数，超时后自动取消任务。
+//using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(3000)))
+//{
+//    var sw = Stopwatch.StartNew();
+//    try
+//    {
+//        await Task.Delay(10000, cts.Token);
+//    }
+//    catch (TaskCanceledException ex)
+//    {
+//        Console.WriteLine(ex);
+//    }
+//    Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms.");
+//}
+
+//使用CancelAfter()方法定义超时时间。
+//using (var cts = new CancellationTokenSource())
+//{
+//    cts.CancelAfter(3000);
+//    var sw = Stopwatch.StartNew();
+//    try
+//    {
+//        await Task.Delay(10000, cts.Token);
+//    }
+//    catch (TaskCanceledException ex)
+//    {
+//        Console.WriteLine(ex);
+//    }
+//    Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms.");
+//}
+
 #endregion
+
+#region CancellationToken的小技巧
+//建议在Async方法中尽量传入CancellationToken，但如果某个任务不希望被cancel掉，就不需要传入CancellationToken。
+//这时有两个方法：
+//1. 将Async方法包装一下，写一个需要CancellationToken版本，在这个版本中传入CancellationToken，再写一个不需要CancellationToken的版本，
+//在这个版本中调用第一个版本，并传入CancellationToken.None即可；
+//2. 将Async方法包装一下，传入一个可选参数CancellationToken，且默认值为null，在内部去判断是否传入了CancellationToken，如果没传入，那么
+//调用Async方法时，传一个CancellationToken.None即可。
+//class Demo
+//{
+//    /// <summary>
+//    /// 需要CancellationToken的版本。
+//    /// </summary>
+//    /// <param name="cancellationToken"></param>
+//    /// <returns></returns>
+//    async Task FooAsync(CancellationToken cancellationToken)
+//    {
+//        await Task.Delay(1000);
+//        var client = new HttpClient();
+//        await client.GetStringAsync("/localhost:XXXX", cancellationToken);
+//    }
+
+//    /// <summary>
+//    /// 不需要CancellationToken的版本。
+//    /// </summary>
+//    /// <returns></returns>
+//    Task FooAsync() => FooAsync(CancellationToken.None);
+
+//    /// <summary>
+//    /// 第二种方案，传入可为空的cancellationToken，默认值为null。
+//    /// </summary>
+//    /// <param name="cancellationToken"></param>
+//    /// <returns></returns>
+//    async Task FooAsyncV2(CancellationToken? cancellationToken = null)
+//    {
+//        var token = cancellationToken ?? CancellationToken.None;
+//        await Task.Delay(1000, token);
+//    }
+//}
+#endregion
+
+#region 自己写的方法中如何使用cancellationToken
+//前面的演示中，Task.Delay()方法自带cancellationToken，传入后在触发了cts.cancel()后，Task.Delay()方法就会被终止，这是因为在方法内部对token的状态有一个判断。
+//在自己写的方法中，就需要使用cancellationToken.IsCancellationRequested手动去判断token的状态。
+
+//这里传入了一个超时3秒的cancellationToken。
+//using (var cts = new CancellationTokenSource(3000))
+//{
+//    Foo foo = new Foo();
+//    await foo.FooAsync(cts.Token);
+//}
+#endregion
+
+#region 任务取消的对策
+//1. 抛出异常；
+//2. 返回一个task对象，其能够让外界追踪该task的状态；
+
+//只演示第二种对策：
+//using (var cts = new CancellationTokenSource())
+//{
+//    Foo2 foo2 = new Foo2();
+//    int input = 1;
+//    if (input % 2 == 0)
+//        cts.Cancel();
+//    Task<int> res = foo2.FooAsync(input, cts.Token); //这里不要使用await，否则会等待FooAsync执行完毕，后续if代码才执行；且会返回int而非Task；
+//                                                     //且会抛出异常，但这里我们不希望使用try catch。
+//由于没有使用await，因此FooAsync会在后台执行，且代码会继续向下执行，如果这里需要FooAsync的结果，那么使用res.Result调取结果，注意，如果此时任务已经
+//结束，那么不会阻塞主线程，直接获取到结果；如果任务在调用res.Result时还没完成，那么会阻塞主线程直到获取到结果为止。
+//    if (res.Status == TaskStatus.Canceled)
+//        Console.WriteLine(res.Status);
+//    else
+//        Console.WriteLine(res.Result);
+//}
+#endregion
+
+#region Task.Run可以直接传入cancellationToken，传入后无需再进行IsCancellationRequested的预检测，会自动抛出异常。但后后续代码无法自动触发TaskCanceledException异常
+//在Task.Run中传入token的唯一作用就是替代任务一开始对IsCancellationRequested的预检测，一旦进入while循环，即使外部触发了cancel，那么Task也不会因此停止。
+//因此如果是需要长期监测token状态，依然需要在每次循环中检测IsCancellationRequested。
+//using (var cts = new CancellationTokenSource(2000))
+//{
+//    cts.Cancel();
+//    try
+//    {
+//        await Task.Run(() =>
+//        {
+//            //if (cts.IsCancellationRequested) //Task.Run传入cts.Token的唯一作用就是替代这两句，一旦执行到while循环里，就无法捕捉外界对token的cancel操作了。
+//            //    return;
+//            while (true)
+//            {
+//                Thread.Sleep(1000);
+//                Console.WriteLine("Foo...");
+//            }
+//        }, cts.Token);
+//    }
+//    catch (TaskCanceledException ex)
+//    {
+//        Console.WriteLine(ex);
+//    }
+
+//}
+#endregion
+
+#region token.Register()方法，可以在token被cancel后，执行一些后续方法
+//using (var cts = new CancellationTokenSource(4000))
+//{
+//    cts.Token.Register(() => { Console.WriteLine("用户如果取消下载任务，那么可能需要在这里删除已下载内容。"); });
+//    cts.Token.Register(() => { Console.WriteLine("在这里给用户弹窗显示一些信息。"); });
+//    //注意：执行的顺序是，后注册的先被调用。
+//    try
+//    {
+//        await Task.Run(() => 
+//        {
+//            int progress = 0;
+//            while (true)
+//            {
+//                if (cts.Token.IsCancellationRequested)
+//                    return;
+//                Console.WriteLine($"正在下载...{progress++}%");
+//                Thread.Sleep(1000);
+//            }
+//        }, cts.Token);
+//    }
+//    catch (TaskCanceledException ex)
+//    {
+//        Console.WriteLine(ex);
+//    }
+//}
+#endregion
+
+class Foo
+{
+    /// <summary>
+    /// 异步方法，如果不被cancel，就一直执行HeayJob。
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public Task FooAsync(CancellationToken cancellationToken)
+    {
+        return Task.Run(() =>
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                HeayJob();
+            }
+
+            //或用if判断，如果触发了cancel，就抛出异常。
+            //while (true)
+            //{
+            //    if (cancellationToken.IsCancellationRequested)
+            //        cancellationToken.ThrowIfCancellationRequested();
+            //    HeayJob();
+            //}      
+        });
+    }
+
+    /// <summary>
+    /// 耗时的同步方法。
+    /// </summary>
+    private void HeayJob()
+    {
+        Console.WriteLine("HeayJob is working...");
+        Thread.Sleep(1000);
+    }
+}
+
+class Foo2
+{
+    /// <summary>
+    /// 如果不被cancel就执行HeayJob()，否则返回一个被cancel的Task对象。
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public Task<int> FooAsync(int input, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<int>(cancellationToken);
+        else return Task.Run( () => HeayJob(input));
+        //注意：Task.Run接收一个Action或Func，但不能有显示的参数传入，例如Task.Run((int input) = >{})，只能是Task.Run((int input) = >{})
+        //如果需要传参，封装一个函数然后将其返回给Lambda函数，例如这里的HeayJob(input)。
+        //另一种传参的方法使用闭包技术：Lambda中的input，通过闭包从Task.Run外部传入。
+        //else return Task.Run(() =>
+        //{
+        //    Thread.Sleep(1000);
+        //    return input;
+        //});
+    }
+
+    /// <summary>
+    /// 耗时的同步方法。
+    /// </summary>
+    private int HeayJob(int input)
+    {
+        Thread.Sleep(1000);
+        return input;
+    }
+}
 #endregion
