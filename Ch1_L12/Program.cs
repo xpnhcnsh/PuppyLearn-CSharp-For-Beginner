@@ -7,6 +7,7 @@ using MyUtilities;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Channels;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 int count = 0;
 //var thread1 = new Thread(ThreadMethod);
@@ -246,7 +247,7 @@ int count = 0;
 
 //Console.WriteLine(task.Status);
 //task.Start(); //Start()方法不会阻塞主线程，后续打印task.Status的方法会在task运行的同步执行。
-////task.Wait(); //Wait()方法会阻塞主线程，直到task结束或触发异常，才继续执行Wait()后的代码。
+//////task.Wait(); //Wait()方法会阻塞主线程，直到task结束或触发异常，才继续执行Wait()后的代码。
 //Console.WriteLine(task.Status);
 //Thread.Sleep(1000);
 //Console.WriteLine(task.Status);
@@ -255,16 +256,17 @@ int count = 0;
 //Console.WriteLine(task.Result);
 
 //更常见的开启一个任务的方法是使用await Task.Run()，使用await关键字后，会直接返回原本的返回值，例如这里返回的是string，而不是Task<string>：
-
+//使用await后，后续代码不会立即执行，而是等待await的任务完成，如果不想让主线程等待，那么不要使用await即可。
 //Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 主线程");
 //var task2Res = await Task.Run(() =>
 //{
+//    Task.Delay(1000);
 //    Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 任务线程"); //与主线程id不同
-//    Task.Delay(100);
 //    return "done";
 //});
 //Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 主线程"); //默认情况下会继续使用当前的线程，不会切回原线程。
-//Console.WriteLine(task2Res);
+//Console.WriteLine(task2Res); //如果不写await，那么这里无法拿到task2Res正确的结果，因为没等任务执行完毕，代码就已经执行到这里了。这被称为Fire & Forget，一发既忘。
+//                             //最好不要这样做。
 #endregion
 
 #region async void & async Task: async Task返回一个Task对象，对异步方法进行包装，使外部可以捕捉到其异常，或感知到其执行状态，使异步方法更安全
@@ -298,7 +300,7 @@ int count = 0;
 
 #region 同时执行多个异步任务： Wait & WaitAll & WaitAny，注意WaitAll、WaitAny、Wait(和Task.Result)会阻塞当前线程直到任务完成
 //使用Wait()同步执行所有任务，每次执行一个任务时，都会阻塞主线程，因此虽然任务本身是异步的，但并没有节省时间。
-Stopwatch watch = Stopwatch.StartNew();
+//Stopwatch watch = Stopwatch.StartNew();
 //for (int i = 0; i <= 10; i++)
 //{
 //    var task = Task.Run(SearchAysnc);
@@ -346,8 +348,11 @@ static async Task<string> SearchAysnc()
     await Task.Delay(rnd.Next(3000)); //注意：不要在async方法里使用阻塞！！！这里使用Task.Delay，而不是Thread.Sleep因为await Task.Delay会释放主线程去执行别的工作，
                                       //不会阻塞主线程，而Thread.Sleep会阻塞主线程，这样一来异步任务就没有意义了。
                                       //Thread.Sleep(3000); //在console程序中，体现不出区别，如果是WPF或WinForm，Thread.Sleep会导致UI阻塞。因为这句之前的两行，依然是在UI线程中执行的
-                                      //因此Thread.Sleep会使UI线程阻塞，只有在Thread.Sleep结束后，后面的两行代码才可能回到(也可能不回到，通过ConfigAwait(false)去配置，该配置在
-                                      //Asp.net中无效，只在WinForm和WPF中生效。)UI线程去。而使用await执行耗时操作，可以确保await的任务使用新的线程执行，放开UI线程去
+                                      //因此Thread.Sleep会使UI线程阻塞，只有在Thread.Sleep结束后，后面的两行代码才会回到UI线程去(使用ConfigAwait(false)，表示后续代码将失去同步上下文
+                                      //(synchronization context)，即不会使用UI线程执行后续操作：在ASP.Net中，意味着失去HttpContext；在WPF或WinForm中意味着失去UI操作权限，因为将不会
+                                      //返回UI线程。而Console程序不存在同步上下文，所以ConfigAwait(false)在console中不生效。在UI程序或Asp.Net中，如果在同步方法中阻塞异步方法，可能会
+                                      //导致死锁：例如在异步任务中调用UI资源去计算一个返回值，而UI线程中在wait()该异步任务（或使用.Result等待其返回值），此时UI线程被阻塞，无法给异步任务
+                                      //提供计算所需的资源，就会产生死锁）。而使用await执行耗时操作，可以确保await的任务使用新的线程执行，放开UI线程去
                                       //响应其他操作。（对于ASP.Net，则是放开web服务，相应其他用户的请求，而不会因为一个用户的好事请求阻塞整个web服务，从而提高并发量。）
     watch.Stop();
     return $"[{Environment.CurrentManagedThreadId}]: {watch.ElapsedMilliseconds}"; //语法糖：这里只需返回string，无需返回Task<string>。
@@ -696,25 +701,25 @@ async Task FooAsync(CancellationToken token)
 //使用Channel以异步形式实现生产者消费者队列：
 //由于Take是一个阻塞方法，以上方案只能用在Thread多线程编程中，但异步编程要求是“不阻塞”。
 //option定义一些channel的属性：
-var option = new BoundedChannelOptions(20) //消息队列最多20个待处理的消息。
-{
-    FullMode = BoundedChannelFullMode.Wait, //当队列已满，新的消息会等待，直到队列有空位。
-    SingleWriter = true, //只有1个生产者
-    SingleReader = false, //可以有多个消费者
-    AllowSynchronousContinuations = false, //允许消费者以同步方式处理数据，通常设为false：一般当消费者的处理速度大于生产者时，生产出一个元素后，再使用信号量去
-                                            //通知消费者开销较大，这时使用同步的方式调用消费者性能更高，但这种情况较少出现。
-};
-//只能使用静态方法去生成Bounded或Unbounded channel。
-var channel = Channel.CreateBounded<Message>(option);
-var sender1 = SendMsgAsync(channel.Writer, "Sender1");
-var sender2 = SendMsgAsync(channel.Writer, "Sender2");
-var receiver1 = ReceiveMsgAsync(channel.Reader, "Receiver1");
-var receiver2 = ReceiveMsgAsync(channel.Reader, "Receiver2");
+//var option = new BoundedChannelOptions(20) //消息队列最多20个待处理的消息。
+//{
+//    FullMode = BoundedChannelFullMode.Wait, //当队列已满，新的消息会等待，直到队列有空位。
+//    SingleWriter = true, //只有1个生产者
+//    SingleReader = false, //可以有多个消费者
+//    AllowSynchronousContinuations = false, //允许消费者以同步方式处理数据，通常设为false：一般当消费者的处理速度大于生产者时，生产出一个元素后，再使用信号量去
+//                                            //通知消费者开销较大，这时使用同步的方式调用消费者性能更高，但这种情况较少出现。
+//};
+////只能使用静态方法去生成Bounded或Unbounded channel。
+//var channel = Channel.CreateBounded<Message>(option);
+//var sender1 = SendMsgAsync(channel.Writer, "Sender1");
+//var sender2 = SendMsgAsync(channel.Writer, "Sender2");
+//var receiver1 = ReceiveMsgAsync(channel.Reader, "Receiver1");
+//var receiver2 = ReceiveMsgAsync(channel.Reader, "Receiver2");
 
-await Task.WhenAll(sender1, sender2);
-channel.Writer.Complete(); //当所有senders都执行完毕，writer发出信号表示已经不会有数据进入channel。
-                           //Reader在消费完毕后触发ChannelClosedException，而不是writer.complete()时就抛出异常。
-await Task.WhenAll(receiver1, receiver2);
+//await Task.WhenAll(sender1, sender2);
+//channel.Writer.Complete(); //当所有senders都执行完毕，writer发出信号表示已经不会有数据进入channel。
+//                           //Reader在消费完毕后触发ChannelClosedException，而不是writer.complete()时就抛出异常。
+//await Task.WhenAll(receiver1, receiver2);
 
 async Task SendMsgAsync(ChannelWriter<Message> writer, string SenderName)
 {
@@ -750,6 +755,81 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
         Console.WriteLine($"{ReceiverName} received {msg.Msg} from {msg.ThreadName}");
     }
 }
+#endregion
+
+#region Task.Result 和 Task.GetAwaiter().GetResult()/await的区别
+//using (var cts = new CancellationTokenSource())
+//{
+//    var foo = new Foo2();
+//    try
+//    {
+//        //Recall：Task.Result是一个阻塞方法，等待异步方法返回结果。
+//        //但如果异步方法抛出异常，这里捕捉到的并不是异步方法里抛出的那个异常，而是一个AggregateException，异步方法里的那个异常，被包装在了InnerException里。
+//        //var res = foo.FooAsync2(10, cts.Token).Result;
+
+//        //通过Task.GetAwaiter().GetResult()则能直接拿到InnerException。
+//        //var res = foo.FooAsync2(10, cts.Token).GetAwaiter().GetResult();
+//        //Console.WriteLine("123");
+//        //或直接await
+//        var res = await foo.FooAsync2(10, cts.Token);
+//    }
+//    catch (Exception ex)
+//    {
+//        Console.WriteLine(ex);
+//    }
+//}
+#endregion
+
+#region 如何在同步方法里调用异步方法：构造函数中调用IO密集操作
+//想在一个同步方法中，调用一个异步方法会碰到以下问题：
+//1. 在同步方法中，使用await调用一个异步方法会导致async的传染，该同步方法必须被标记为async，也就变成了异步方法；
+//2. 使用Task.Result或Task.GetAwaiter().GetResult()，虽然不用await关键字不会导致异步的传染，但会导致同步方法的阻塞;
+//3. 使用Fire & Forget，即直接调用异步方法，不使用await：外界无法catch到异步方法抛出的异常，也无法追踪该任务的状态。
+
+//方法一和方法二：
+//try
+//{
+//    var dataModel = new MyDataModel();
+//    Console.WriteLine("Loading data in constructor...");
+//    while (true)
+//    {
+//        Thread.Sleep(1);
+//        if (dataModel.IsDateLoaded)
+//            break;
+//    }
+//    var data = dataModel.Data;
+//    data.Show();
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine(ex);
+//}
+
+//方法三：
+//try
+//{
+//    var dataModel = await MyDataModel.CreateAsync();
+//    Console.WriteLine("Loading data in constructor...");
+//    while (true)
+//    {
+//        Thread.Sleep(1);
+//        if (dataModel.IsDateLoaded)
+//            break;
+//    }
+//    var data = dataModel.Data;
+//    data.Show();
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine(ex);
+//}
+
+//总结：
+//如果接受异步的传染性，整个项目都可以被改为异步形式，而C#内置了非常多的异步方法，因此大多数时候，不需要担心异步的传染性，
+//如果非要在同步方法中调用异步，那么会比较麻烦，推荐方案一。
+#endregion
+
+#region 如何在异步方法中实现同步
 #endregion
 
 class Foo
@@ -791,7 +871,7 @@ class Foo
 class Foo2
 {
     /// <summary>
-    /// 如果不被cancel就执行HeayJob()，否则返回一个被cancel的Task对象。
+    /// 如果不被cancel就执行HeayJob()，否则返回一个被cancel的Task对象，可追踪该Task对象的状态是被cancel的。
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
@@ -818,6 +898,121 @@ class Foo2
         Thread.Sleep(1000);
         return input;
     }
+
+    /// <summary>
+    /// 假设在异步方法中会抛出一个异常。
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<int> FooAsync2(int input, CancellationToken token)
+    {
+        await Task.Delay(1000);
+        //throw new Exception("Error!");
+        return input;
+    }
+}
+
+class MyDataModel
+{
+    public IEnumerable<int> Data { get; set; }
+    public bool IsDateLoaded { get; private set; } = false;
+
+    /// <summary>
+    /// 我们希望在同步的构造函数中，调用异步方法来初始化<see cref="MyDataModel.Data">Data</see>属性。
+    /// 注意：方法一的扩展方法<see cref="AsyncExtension.Await(Task, Action?, Action{Exception}?)">Await()</see>的实现。
+    /// </summary>
+    public MyDataModel()
+    {
+        //LoadDataAsync(); //F&F会导致无法对任务进行追踪，也无法抓住内部的异常。
+
+        //方法一：SafeFireAndForget
+        //SafeFireAndForget(LoadDataAsync(), () => IsDateLoaded = true, ex => throw ex);
+
+        //方法一的扩展方法
+        //LoadDataAsync().Await(() => IsDateLoaded = true, ex => throw ex);
+
+        //方法二：使用内置的ContinueWith()
+        //LoadDataAsync().ContinueWith(t=>IsDateLoaded = true, TaskContinuationOptions.OnlyOnRanToCompletion); //只在Task成功执行后才执行回调。
+        //这种调用只能传入成功的回调，如果想要再传入失败的回调，可以将两个回调包装成一个方法，将这个方法传入ContinueWith：
+        LoadDataAsync().ContinueWith(t => OnDataLoaded(t));
+        //方法二的缺点：
+        //1.ContinueWith()会返回一个Task，即使LoadDataAsync()本身并不需要返回任何东西，这凭空增加了一些开销；
+        //2.ContinueWith()默认调用当前线程去执行后续操作，这一点是比较危险的。（回忆使用.Result后再调用UI线程执行一些操作时发生的死锁：.Result阻塞了UI线程，而在
+        //Task里又需要UI权限去执行某些操作从而获得Result）
+
+        //方法三：使用工厂函数调用私有的constructor，然后在工厂函数中await异步方法并赋值，最后返回实例。
+        //缺点是：无法将这种形式创建的实例注册给IOC容器。
+    }
+
+    /// <summary>
+    /// 模拟一个速度很慢的IO过程，例如从数据库/文件中读取一组数。
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    async Task LoadDataAsync()
+    {
+        await Task.Delay(1000);
+        Data = Enumerable.Range(1,10).ToList();
+        //throw new Exception("Data loading error!"); //模拟读取数据时发生异常。
+    }
+
+    /// <summary>
+    /// 方法一：写一个async void方法包装需要调用的异步方法task，并传入成功和失败的回调。
+    /// 在SafeFireAndForget中await该异步方法，就可以catch到其内部抛出的异常，然后
+    /// 分别执行成功和失败回调即可。
+    /// 注意：虽然外部无法捕捉到Async void (即SafeFireAndForget)方法内部抛出的异常，但是对于异步方法内部抛出的异常我们可以在SafeFireAndForget内部去处理，因为在
+    /// SafeFireAndForget内部，可以await这个异步方法，也就可以在SafeFireAndForget内部拿到异步方法的异常进行根据是否发生异常去执行
+    /// 两种不同的回调。
+    /// </summary>
+    /// <param name="task"></param>
+    /// <param name="onCompleted"></param>
+    /// <param name="onError"></param>
+    async void SafeFireAndForget(Task task, Action? onCompleted= null, Action<Exception>? onError = null)
+    {
+        try
+        {
+            await task;
+            onCompleted?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            onError?.Invoke(ex);
+        }
+    }
+
+    /// <summary>
+    /// 方法二：使用ContinueWith()调用该方法，本方法内含有失败和成功的回调。
+    /// </summary>
+    /// <param name="task"></param>
+    private void OnDataLoaded(Task task)
+    {
+        if(task.IsFaulted)
+        {
+            Console.WriteLine(task.Exception.InnerException); //失败的回调：这里抛出的是AggregateException，使用InnerException获取原本的异常。
+        }
+        IsDateLoaded = true; //成功的回调
+    }
+
+    /// <summary>
+    /// 方法三：使用工厂函数创建实例，将构造函数写成私有，然后在工厂函数中调用构造函数并await异步方法，最后把实例返回给外部。
+    /// </summary>
+    /// <returns></returns>
+    public static async Task<MyDataModel> CreateAsync()
+    {
+        var dataModel = new MyDataModel();
+        try
+        {
+            await dataModel.LoadDataAsync();
+            dataModel.IsDateLoaded = true;
+            return dataModel;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
 }
 
 static class AsyncExtension
@@ -832,6 +1027,25 @@ static class AsyncExtension
             throw new TimeoutException();
         }
         await task;
+    }
+
+    /// <summary>
+    /// 方法一的extension方法。
+    /// </summary>
+    /// <param name="task"></param>
+    /// <param name="onCompleted"></param>
+    /// <param name="onError"></param>
+    public static async void Await(this Task task, Action? onCompleted, Action<Exception>? onError)
+    {
+        try
+        {
+            await task;
+            onCompleted?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            onError?.Invoke(ex);
+        }
     }
 }
 
