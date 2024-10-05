@@ -4,7 +4,9 @@
 #region 多线程:线程是操作系统中能够独立运行的最小单位；线程是进程的一部分；main函数是一个进程的主线程入口，在主线程中，可以开启多个子线程。
 //开启两个线程，对count变量自增，当两个线程执行完毕后，count是多少？
 using MyUtilities;
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Threading.Channels;
 
 int count = 0;
 //var thread1 = new Thread(ThreadMethod);
@@ -542,6 +544,214 @@ static async Task<string> SearchAysnc()
 //}
 #endregion
 
+#region 超时机制
+//Thread多线程的超时机制.
+//Join()方法接收一个超时参数，在超时后，检查线程是否停止，如果已停止返回true，否则返回false。
+//如果2s后依然没有停止，调用Interrupt()停止线程。在函数内部，捕捉ThreadInterruptedException，并进行资源释放等操作。
+//var thread = new Thread(Foo);
+//thread.Start();
+//if (!thread.Join(2000))
+//{
+//    thread.Interrupt();
+//}
+//Console.WriteLine("Done");
+
+//Async Task异步的超时机制：假设fooTask需要3秒执行完毕，将fooTask和一个2s的delay一起放到whenany里，2s后delay任务执行完毕，返回该任务，
+//比较completedTask是否是fooTask，如果不是说明已超时，这时调用cts.cancel主动取消fooTask，然后再等待其结束即可。
+//这个过程中，fooTask的最后一句Foo end...无法被打印出来，因为在2s的时候任务就被cancel了。
+//var cts = new CancellationTokenSource();
+//var fooTask = FooAsync(cts.Token);
+//var completedTask = await Task.WhenAny(fooTask, Task.Delay(2000));
+//if (completedTask !=fooTask)
+//{
+//    cts.Cancel();
+//    await fooTask;
+//    Console.WriteLine("Timeout, fooTask canceled");
+//}
+
+//使用扩展方法实现Task的timeout机制：.Net6以前需要自己写扩展方法。
+//var cts = new CancellationTokenSource();
+//var fooTask = FooAsync(cts.Token);
+//try
+//{
+//    await fooTask.TimeoutAfter(TimeSpan.FromMilliseconds(2000));
+//    Console.WriteLine("Success!");
+//}
+//catch (TimeoutException)
+//{
+//    cts.Cancel();
+//    Console.WriteLine("Timeout!");
+//}
+//finally
+//{
+//    cts.Dispose();
+//}
+//Console.WriteLine("Done");
+
+//使用WaitAsync()，默认接收一个timeout：.Net6以后可用。推荐使用。
+//try
+//{
+//    await fooTask.WaitAsync(TimeSpan.FromMilliseconds(2000));
+//    Console.WriteLine("Success!");
+//}
+//catch (TimeoutException)
+//{
+//    cts.Cancel();
+//    Console.WriteLine("Timeout!");
+//}
+//finally
+//{
+//    cts.Dispose();
+//}
+//Console.WriteLine("Done");
+
+void Foo()
+{
+    try
+    {
+        Console.WriteLine("Foo start...");
+        Thread.Sleep(3000);
+        Console.WriteLine("Foo end...");
+    }
+    catch (ThreadInterruptedException)
+    {
+        Console.WriteLine("Foo interrupted...");
+    }
+}
+
+async Task FooAsync(CancellationToken token)
+{
+    try
+    {
+        Console.WriteLine("Foo start...");
+        await Task.Delay(3000, token);
+        Console.WriteLine("Foo end...");
+    }
+    catch (TaskCanceledException)
+    {
+        Console.WriteLine("Foo canceled...");
+    }
+}
+#endregion
+
+#region 生产者/消费者模式
+//使用Thread实现生产者消费者队列：
+//BlockingCollection是内置线程安全集合，可以接受另一个线程安全的集合作为underlying storage，这里使用ConcurrentQueue。
+//设计了1个生产者，2个消费者；生产者每10ms生产一个元素，消费者每1s消费一个元素。
+//using (var queue = new BlockingCollection<Message>(new ConcurrentQueue<Message>()))
+//{
+//    var sender = new Thread(SendMsg);
+//    var receiver1 = new Thread(ReceiveMsg);
+//    var receiver2 = new Thread(ReceiveMsg);
+//    sender.Start("Sender");
+//    receiver1.Start("Receiver1");
+//    receiver2.Start("Receiver2");
+
+//    sender.Join();
+//    Thread.Sleep(1000);
+//    receiver1.Interrupt(); //1s后杀死receiver
+//    receiver2.Interrupt(); //1s后杀死receiver
+//    receiver1.Join();
+//    receiver2.Join();
+//    Console.WriteLine();
+//    //在receiver结束后，打印出集合里的元素，会发现被receivers take的元素不在集合中，说明被“消费”掉了。
+//    foreach (var message in queue)
+//        Console.WriteLine(message.Msg);
+//    //这套代码并没有使用锁之类的底层的设计，因为我们使用的BlockingCollection、ConcurrentQueue本身就是线程安全的数据类型，
+//    //在编程中，推荐使用内置的线程安全的数据结构，而不是自己造轮子，使用锁去设计自己的线程安全类。
+
+//    //Add msg to queue
+//    //WorkerName由Thread.Start()传入，Start方法只能接收object?类型的参数。
+//    void SendMsg(object? WorkerName)
+//    {
+//        string threadName = (string)WorkerName!;
+//        for (int i = 0; i <= 20; i++)
+//        {
+//            queue.Add(new Message(threadName, i.ToString()));
+//            Console.WriteLine($"{threadName}, sent {i}");
+//            Thread.Sleep(10);
+//        }
+//    }
+
+//    void ReceiveMsg(object? WorkerName)
+//    {
+//        try
+//        {
+//            while (true)
+//            {
+//                //Take是一个阻塞方法。
+//                //注意：当queue中有数据，时，take会从queue里remove一个元素并返回；如果queue里没有可用元素，则会阻塞，直到有可用元素。
+//                var msg = queue.Take();
+//                Console.WriteLine($"{WorkerName} received {msg.Msg} from {msg.ThreadName}");
+//                Thread.Sleep(1000);
+//            }
+//        }
+//        catch (ThreadInterruptedException)
+//        {
+//            Console.WriteLine($"Thread {WorkerName} interrupted!");
+//        }
+//    }
+//}
+
+//使用Channel以异步形式实现生产者消费者队列：
+//由于Take是一个阻塞方法，以上方案只能用在Thread多线程编程中，但异步编程要求是“不阻塞”。
+//option定义一些channel的属性：
+var option = new BoundedChannelOptions(20) //消息队列最多20个待处理的消息。
+{
+    FullMode = BoundedChannelFullMode.Wait, //当队列已满，新的消息会等待，直到队列有空位。
+    SingleWriter = true, //只有1个生产者
+    SingleReader = false, //可以有多个消费者
+    AllowSynchronousContinuations = false, //允许消费者以同步方式处理数据，通常设为false：一般当消费者的处理速度大于生产者时，生产出一个元素后，再使用信号量去
+                                            //通知消费者开销较大，这时使用同步的方式调用消费者性能更高，但这种情况较少出现。
+};
+//只能使用静态方法去生成Bounded或Unbounded channel。
+var channel = Channel.CreateBounded<Message>(option);
+var sender1 = SendMsgAsync(channel.Writer, "Sender1");
+var sender2 = SendMsgAsync(channel.Writer, "Sender2");
+var receiver1 = ReceiveMsgAsync(channel.Reader, "Receiver1");
+var receiver2 = ReceiveMsgAsync(channel.Reader, "Receiver2");
+
+await Task.WhenAll(sender1, sender2);
+channel.Writer.Complete(); //当所有senders都执行完毕，writer发出信号表示已经不会有数据进入channel。
+                           //Reader在消费完毕后触发ChannelClosedException，而不是writer.complete()时就抛出异常。
+await Task.WhenAll(receiver1, receiver2);
+
+async Task SendMsgAsync(ChannelWriter<Message> writer, string SenderName)
+{
+    for (int i = 0; i <= 20; i++)
+    {
+        await writer.WriteAsync(new Message(SenderName, i.ToString()));
+        Console.WriteLine($"{SenderName} sent {i.ToString()}");
+    }
+}
+
+async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
+{
+    //.Net8以前的Receiver写法：
+    //try
+    //{
+    //    //注意：这里是reader去判断complete，当writer set complete时，如果channel里仍然有消息，那么reader依然会继续处理消息，直到channel为空
+    //    //reader才会自动set complete，然后触发ChannelClosedException。
+    //    while (!reader.Completion.IsCompleted) 
+    //    {
+    //        var msg = await reader.ReadAsync(); //等同于多线程中BlockingCollection.Take方法，当Channel中有数据的时候就会异步地读取数据，区别是不会阻塞线程。
+    //        Console.WriteLine($"{ReceiverName} received {msg.Msg} from {msg.ThreadName}");
+    //    }
+    //}
+    //catch (ChannelClosedException)
+    //{
+    //    Console.WriteLine($"Channel closed!");
+    //}
+
+    //.Net8之后的Receiver写法：
+    //无需处理ChannelClosedException了。
+    await foreach (var msg in reader.ReadAllAsync()) 
+    {
+        Console.WriteLine($"{ReceiverName} received {msg.Msg} from {msg.ThreadName}");
+    }
+}
+#endregion
+
 class Foo
 {
     /// <summary>
@@ -589,7 +799,7 @@ class Foo2
     {
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<int>(cancellationToken);
-        else return Task.Run( () => HeayJob(input));
+        else return Task.Run(() => HeayJob(input));
         //注意：Task.Run接收一个Action或Func，但不能有显示的参数传入，例如Task.Run((int input) = >{})，只能是Task.Run((int input) = >{})
         //如果需要传参，封装一个函数然后将其返回给Lambda函数，例如这里的HeayJob(input)。
         //另一种传参的方法使用闭包技术：Lambda中的input，通过闭包从Task.Run外部传入。
@@ -609,4 +819,22 @@ class Foo2
         return input;
     }
 }
+
+static class AsyncExtension
+{
+    public static async Task TimeoutAfter(this Task task, TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource();
+        var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
+        if (completedTask != task)
+        {
+            cts.Cancel();
+            throw new TimeoutException();
+        }
+        await task;
+    }
+}
+
+record Message(string ThreadName, string Msg);
 #endregion
+
