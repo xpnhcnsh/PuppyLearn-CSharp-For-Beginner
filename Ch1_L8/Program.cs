@@ -8,12 +8,13 @@
 
 #region Action: No return value
 Calculator Cal = new Calculator();
-Action Act = new Action(Cal.Version); //传入的是需要调用的函数的地址
-Cal.Version(); //直接调用
-Act.Invoke(); //间接调用
-Act(); //简写
-Action<string> Act2 = Cal.ShowName;
-Act2("卡西欧");
+//Action Act = new Action(Cal.Version); //传入的是需要调用的函数的地址
+//Cal.Version(); //直接调用
+//Act.Invoke(); //间接调用
+//Act(); //简写
+//Action<string> Act2 = Cal.ShowName;
+//Act2("卡西欧");
+//Act2.Invoke("卡西欧");
 #endregion
 
 #region Func: Has return value
@@ -49,29 +50,29 @@ Act2("卡西欧");
 //WrapFactory wrapFactory = new WrapFactory();
 //Logger logger = new Logger();
 
-////作者B在这里封装委托
-//Func<Product> func1 = new Func<Product>(productFactory.MakePizza);
-//Func<Product> func2 = new Func<Product>(productFactory.MakeToyCar);
+//////作者B在这里封装委托
+//Func<Product> PizaDelegate = new Func<Product>(productFactory.MakePizza);
+//Func<Product> ToyCarDelegate = new Func<Product>(productFactory.MakeToyCar);
 //Action<Product> log = new Action<Product>(logger.Log);
 
-////作者B调用作者A写的wrapFactory.WrapProduct方法，其中的参数都是作者B自己实现的。
-//Box box1 = wrapFactory.WrapProduct(func1, log);
-//Box box2 = wrapFactory.WrapProduct(func2, log);
+//////作者B调用作者A写的wrapFactory.WrapProduct方法，其中的参数都是作者B自己实现的。
+//Box box1 = wrapFactory.WrapProduct(PizaDelegate, log);
+//Box box2 = wrapFactory.WrapProduct(ToyCarDelegate, log);
 
 //Console.WriteLine($"{box1.Product.Name},\n{box2.Product.Name}");
 
 ////以上作者A和B的写作过程，实现了解耦。通常作者A的工作，是实现一个框架，而作者B的工作，是使用该框架实现具体的功能。
 
 
-////另一个例子：
-////框架作者写一个GotoStation()方法，第一步：买票；第二步；去车站；第三步：坐车。
-////作为框架的作者，定义了第一步和第三步的具体方法，但第二步由使用框架的人自己去实现。
+//另一个例子：
+//框架作者写一个GotoStation()方法，第一步：买票；第二步；去车站；第三步：坐车。
+//作为框架的作者，定义了第一步和第三步的具体方法，但第二步由使用框架的人自己去实现。
 //void GotoStation(Action Step2)
 //{
 //    Console.WriteLine();
-//Step1();
-//Step2.Invoke();
-//Step3();
+//    Step1(); //在12306上买票
+//    Step2.Invoke();
+//    Step3(); //坐车的方法也写死了
 //}
 
 //void Step1()
@@ -104,8 +105,8 @@ Act2("卡西欧");
 //Action byCar = new Action(() => Console.WriteLine("go to station by car..."));
 //GotoStation(byCar);
 
-////使用过程中，用户A和B不需要关心step1和step3的实现，之需要自己实现step2的方法即可。
-////而框架使用者不需要关心step2，只需要提前实现好step1和step3即可。
+//////使用过程中，用户A、B和C不需要关心step1和step3的实现，之需要自己实现step2的方法即可。
+//////而框架使用者不需要关心step2，只需要提前实现好step1和step3即可。
 #endregion
 
 #region 多播委托：Multicast Delegate，一个委托中传入多个方法。
@@ -117,11 +118,13 @@ Act2("卡西欧");
 //Action act2 = new Action(stu2.DoHomeWork);
 //Action act3 = new Action(stu3.DoHomeWork);
 
-////act1.Invoke();
-////act2.Invoke();
-////act3.Invoke();
+//act1.Invoke();
+//act2.Invoke();
+//act3.Invoke();
 
-////act1是一个多播委托；执行顺序和封装顺序一致。
+//act1是一个多播委托；执行顺序和封装顺序一致。
+//act1 += stu2.DoHomeWork;
+//act1 += stu3.DoHomeWork;
 //act1 += act3 += act2;
 //act1.Invoke();
 //act1 -= act3;
@@ -129,8 +132,8 @@ Act2("卡西欧");
 
 //如果一个多播委托具有参数，那么里面的每个方法都传入相同的参数。
 //如果一个多播委托具有返回值，那么只会返回最后一个方法的返回值，前面的返回值会被忽略。
-
 //如果多播委托的参数是引用参数，那么调用列表中的方法传入的参数是上一个方法修改后的引用参数，而不是原始的引用参数。
+
 //DelWithRefPara cascadingAddRef = AddBy3Ref;
 //cascadingAddRef += AddBy2Ref;
 //int a = 1;
@@ -143,87 +146,94 @@ Act2("卡西欧");
 //cascadingAdd(b);
 //Console.WriteLine(b);
 
-//void AddBy3Ref(ref int x)
-//{
-//    x += 3;
-//}
+void AddBy3Ref(ref int x)
+{
+    x += 3;
+}
 
-//void AddBy2Ref(ref int x)
-//{
-//    x += 2;
-//}
-//void AddBy3(int x)
-//{
-//    x += 3;
-//}
+void AddBy2Ref(ref int x)
+{
+    x += 2;
+}
 
-//void AddBy2(int x)
-//{
-//    x += 2;
-//}
+void AddBy3(int x)
+{
+    x += 3;
+}
+
+void AddBy2(int x)
+{
+    x += 2;
+}
 #endregion
 
 #region Lambda表达式：如果一个方法只调用一次，无需声明该方法，使用lambda表达式更简便。=>读作：goes to
 //使用Lambda表达式重写AddBy2Ref和AddBy3Ref方法：
-//DelWithRefPara cascadingAddRef = (ref int x) => { x += 2; }; //AddBy2Ref
+//DelWithRefPara cascadingAddRef = (ref int x) => x += 2 ; //AddBy2Ref
 //cascadingAddRef += (ref int x) => { x += 3; }; //AddBy3Ref
 //int a = 1;
 //cascadingAddRef(ref a);
 //Console.WriteLine(a);
 #endregion
 
-#region 使用Interface替代delegate。
+#region 使用Interface替代delegate
 ////delegate使用不当会造成内存泄露或性能下降，如果要实现协作，可以使用Interface替代。
 ////但interface不如delegate灵活，实际工作中，更多的是使用lambda表达式去实现委托。
 ////下面使用Interface重构ProductFactory
-//IProductFactory PizzFactory = new PizzaFactory();
-//IProductFactory ToyCarFactory = new ToyCarFactory();
-//WrapFactoryInterface WrapFactoryInterface = new WrapFactoryInterface();
+IProductFactory PizzFactory = new PizzaFactory();
+IProductFactory ToyCarFactory = new ToyCarFactory();
+WrapFactoryInterface WrapFactoryInterface = new WrapFactoryInterface();
 
-//Box box1 = WrapFactoryInterface.WrapProduct(PizzFactory);
-//Box box2 = WrapFactoryInterface.WrapProduct(ToyCarFactory);
-//Console.WriteLine($"{box1.Product.Name},\n{box2.Product.Name}");
+Box box1 = WrapFactoryInterface.WrapProduct(PizzFactory);
+Box box2 = WrapFactoryInterface.WrapProduct(ToyCarFactory);
+Console.WriteLine($"{box1.Product.Name},\n{box2.Product.Name}");
 
 ///// <summary>
 ///// 通常Leader写接口，组员具体实现Leader写的接口即可。程序中对接口的定义，就是对程序功能的定义，但功能的具体实现，则由程序员完成。
 ///// </summary>
-//interface IProductFactory
-//{
-//    Product Make();
-//}
+interface IProductFactory
+{
+    Product Make();
+}
 
-//class PizzaFactory : IProductFactory
-//{
-//    public Product Make()
-//    {
-//        Product product = new Product();
-//        product.Name = "Cheese Pizza";
-//        product.Price = 30;
-//        return product;
-//    }
-//}
+class PizzaFactory : IProductFactory
+{
+    public Product Make()
+    {
+        Product product = new Product();
+        product.Name = "Cheese Pizza";
+        product.Price = 30;
+        return product;
+    }
+}
 
-//class ToyCarFactory : IProductFactory
-//{
-//    public Product Make()
-//    {
-//        Product product = new Product();
-//        product.Name = "Truck";
-//        product.Price = 100;
-//        return product;
-//    }
-//}
+class ToyCarFactory : IProductFactory
+{
+    public Product Make()
+    {
+        Product product = new Product();
+        product.Name = "Truck";
+        product.Price = 100;
+        return product;
+    }
+}
 
-//class WrapFactoryInterface
-//{
-//    public Box WrapProduct(IProductFactory productFactory)
-//    {
-//        Box box = new Box();
-//        Product product = productFactory.Make();
-//        box.Product = product;
-//        return box;
-//    }
-//}
+interface IWrapFactoryInterface
+{
+    public Box WrapProduct(IProductFactory productFactory);
+}
+
+
+class WrapFactoryInterface: IWrapFactoryInterface
+{
+    public Box WrapProduct(IProductFactory productFactory)
+    {
+        Box box = new Box();
+        Product product = productFactory.Make();
+        box.Product = product;
+        return box;
+    }
+}
 #endregion
 
 class Calculator
@@ -250,6 +260,7 @@ class Calculator
 }
 
 public delegate int CalcDelegate(int x, int y); //自定义一个委托类型，返回值为int，接受两个int作为参数。注意：委托本身也是一个类。
+//函数签名
 
 delegate void DelWithRefPara(ref int x);
 
@@ -286,7 +297,7 @@ class WrapFactory
     public Box WrapProduct(Func<Product> getProduct, Action<Product> logCallback)
     {
         Box box = new Box();
-        Product product = getProduct();
+        Product product = getProduct.Invoke();
         box.Product = product;
         //如果价格>50，再记录。
         if (product.Price >= 50)

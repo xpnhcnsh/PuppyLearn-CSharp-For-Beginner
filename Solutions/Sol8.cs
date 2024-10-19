@@ -10,7 +10,7 @@ namespace Solutions
     {
         static public ref int FindMax(int[] input)
         {
-            int idx = Array.FindIndex(input, x => x == input.Max());
+            int idx = Array.FindIndex(input, (int x) => x == input.Max());
             return ref input[idx];
         }
     }

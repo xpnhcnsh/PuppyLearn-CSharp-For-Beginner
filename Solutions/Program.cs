@@ -75,8 +75,16 @@
 #endregion
 
 #region Quiz10:自定义sort方法
-var roster = new Roster([new Student(1, 21, 180), new Student(4, 22, 165), new Student(3, 23, 175)]);
-roster.Sort(x=>x.Id);
-foreach (Student s in roster.Value)
-    Console.WriteLine(s);
+//var roster = new Roster([new Student(1, 21, 180), new Student(4, 22, 165), new Student(3, 23, 175)]);
+//roster.Sort(x=>x.Id);
+//foreach (Student s in roster.Value)
+//    Console.WriteLine(s);
+#endregion
+
+#region Quiz11:数组查重
+//Console.WriteLine(Sol11.ContainsDuplicate<string>(["1", "2", "3", "4"])); 
+#endregion
+
+#region Quiz12:第N大的数
+Console.WriteLine(Sol12.ThirdBiggest([1,1,1]));
 #endregion

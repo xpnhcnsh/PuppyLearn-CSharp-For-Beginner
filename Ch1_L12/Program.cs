@@ -4,10 +4,11 @@
 #region 多线程:线程是操作系统中能够独立运行的最小单位；线程是进程的一部分；main函数是一个进程的主线程入口，在主线程中，可以开启多个子线程。
 //开启两个线程，对count变量自增，当两个线程执行完毕后，count是多少？
 using MyUtilities;
+using Nito.AsyncEx;
 using System.Collections.Concurrent;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Threading.Channels;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 int count = 0;
 //var thread1 = new Thread(ThreadMethod);
@@ -258,13 +259,16 @@ int count = 0;
 //更常见的开启一个任务的方法是使用await Task.Run()，使用await关键字后，会直接返回原本的返回值，例如这里返回的是string，而不是Task<string>：
 //使用await后，后续代码不会立即执行，而是等待await的任务完成，如果不想让主线程等待，那么不要使用await即可。
 //Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 主线程");
-//var task2Res = await Task.Run(() =>
+//var task2Res = await Task.Run(async () =>
 //{
-//    Task.Delay(1000);
-//    Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 任务线程"); //与主线程id不同
+//    Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 任务线程"); //这里可能与主线程id不同，但也可能相同。
+//    await Task.Delay(1000);
+//    Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 任务线程"); //与主线程id不同，也与262行不同，说明await语句产生了线程切换。
 //    return "done";
-//});
-//Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 主线程"); //默认情况下会继续使用当前的线程，不会切回原线程。
+//}).ConfigureAwait(false);
+//Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 主线程"); //默认情况下会回到原线程。可以使用ConfigureAwait(false)，使其不回到原线程
+//但在Console中由于不存在同步上下文的概念，因此此配置不起作用。
+//在Console中默认会使用当前线程继续执行后续代码。
 //Console.WriteLine(task2Res); //如果不写await，那么这里无法拿到task2Res正确的结果，因为没等任务执行完毕，代码就已经执行到这里了。这被称为Fire & Forget，一发既忘。
 //                             //最好不要这样做。
 #endregion
@@ -276,10 +280,10 @@ int count = 0;
 //但在对一个事件的任务列表进行注册时，如果注册的方法是无返回值的异步方法，就只能使用async void去定义该方法。大多数应用场景在WPF或WinForm中。
 //try
 //{
-//    //VoidAsync(); //无法捕捉异常；无法使用await关键字去等待该异步方法。
+//    //VoidAsync(); //无法捕捉异常；无法使用await关键字去等待该异步方法，所谓一发既忘，fire & forget。
 //    await TaskAsync(); //返回一个Task，就可以使用await去等待该异步方法；可以catch到该异步方法抛出的异常。
-//    //TaskAsync().Wait(); //也可以使用Wait()，但推荐使用await关键字。
-//    //TaskAsync().GetAwaiter().GetResult(); //不推荐。
+//    //TaskAsync().Wait(); //也可以使用Wait()，阻塞，推荐使用await关键字。
+//    //TaskAsync().GetAwaiter().GetResult(); //阻塞
 //}
 //catch (Exception ex)
 //{
@@ -313,7 +317,7 @@ int count = 0;
 //}
 //Console.WriteLine($"{watch.ElapsedMilliseconds}ms in total.");
 
-//使用WaitAll()并发执行所有任务，主线程阻塞在WaitAll()。
+//使用WaitAll()并发执行所有任务，当前线程等待在WaitAll()。
 //WhenAll()会返回所有任务执行的结果，WaitAll()无返回值。如果任务有返回值，使用WhenAll()，返回的Task对象也可以更好的监测任务状态。
 //List<Task<string>> tasks = new();
 //for (int i = 0; i < 10; i++)
@@ -332,7 +336,7 @@ int count = 0;
 //foreach (var task in tasks)
 //    Console.WriteLine(task.Result);
 
-//使用WaitAny()并发执行所有任务，主线程阻塞在WaitAny()，返回已完成任务的index。
+//使用WaitAny()并发执行所有任务，当前线程等待在WaitAny()，返回已完成任务的index。
 //watch.Restart();
 //Console.WriteLine(Task.WaitAny(tasks.ToArray())); //阻塞，但只要有1个任务结束，阻塞就会结束，继续执行后面的代码。
 ////Console.WriteLine(await Task.WhenAny(tasks.ToArray()).Result); //也可以使用await Task.WhenAny，直接拿到执行完毕的任务的真实结果。
@@ -750,7 +754,7 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 
     //.Net8之后的Receiver写法：
     //无需处理ChannelClosedException了。
-    await foreach (var msg in reader.ReadAllAsync()) 
+    await foreach (var msg in reader.ReadAllAsync())
     {
         Console.WriteLine($"{ReceiverName} received {msg.Msg} from {msg.ThreadName}");
     }
@@ -829,8 +833,93 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 //如果非要在同步方法中调用异步，那么会比较麻烦，推荐方案一。
 #endregion
 
-#region 如何在异步方法中实现同步
+#region 如何在异步方法中实现同步机制：通过加锁
+//所谓同步，就是多个任务之间是顺序执行，而非同时执行。在异步任务中实现同步的需求，往往和多线程处理同一个资源相关。
+//在多线程中的同步需求通过锁(lock、mutex、semephore、monitor等)实现；而异步中不能使用以上锁，因为他们都会导致阻塞，这与异步的思路不一致。
+
+//无法在lock语句中使用await：见CanNotUseLockInAsyncTask类。
+
+//1. 异步任务
+//var sw = new Stopwatch();
+//CanNotUseLockInAsyncTask AsyncLock = new();
+//var tasks = Enumerable.Range(1, 10).Select(x => AsyncLock.HeayJobAsync(x)); //这个版本未上锁，10个任务异步执行，共计约100ms
+//sw.Restart();
+//var res1 = await Task.WhenAll(tasks);
+//Console.WriteLine(string.Join(",", res1));
+//Console.WriteLine(sw.ElapsedMilliseconds);
+
+////2. 通过第三方库Nito.asyncex可在lock中运行异步任务实现异步的同步机制：
+//var tasksLock = Enumerable.Range(1, 10).Select(x => AsyncLock.HeayJobLockAsync(x)); //这个版本由于上了锁，锁内的资源一次只能被一个线程操作
+//                                                                                    //其余线程等待该线程操作完毕后才能接过锁然后在操作锁内的资源
+//                                                                                    //导致10个任务无法异步执行，因此共计约10*100ms。
+//sw.Start();
+//var res2 = await Task.WhenAll(tasksLock);
+//Console.WriteLine(string.Join(",", res2));
+//Console.WriteLine(sw.ElapsedMilliseconds);
+//sw.Stop();
+
+////3. C#内置SemaphoreSlim，可通过调整参数，灵活配置所需的线程个数：
+//var tasksSemaphoreSlim = Enumerable.Range(1, 10).Select(x => AsyncLock.HeayJobSemaphoreSlim(x)); //取决于SemaphoreSlim的配置，当参数为(1,1)时，
+//                                                                                                 //和HeayJobLockAsync时间相同。
+//sw.Restart();
+//var res3 = await Task.WhenAll(tasksSemaphoreSlim);
+//Console.WriteLine(string.Join(",", res3));
+//Console.WriteLine(sw.ElapsedMilliseconds);
+//sw.Stop();
 #endregion
+
+#region 如何在异步方法中实现同步机制：通过信号量
+//1. 使用Nito.AsyncEx中提供的AsyncAutoResetEvent
+//var signal = new AsyncAutoResetEvent(false);
+////2秒后，signal.Set()发出信号。
+//var setter = Task.Run(() =>
+//{
+//    Thread.Sleep(2000);
+//    signal.Set();
+//    Console.WriteLine("Signal Set!");
+//});
+
+////当signal.WaitAsync()会在接收到set信号前阻塞，直到接收到set信号后，才执行后面的内容。
+//var waiter = Task.Run(async () =>
+//{
+//    await signal.WaitAsync();
+//    Console.WriteLine("Signal Received!");
+//});
+////虽然WhenAll接受两个异步任务，但第二个任务实际上在第一个任务发出信号后才执行，因此实际上是同步执行。
+//await Task.WhenAll(setter, waiter);
+
+//2. 使用TaskCompletionSource(泛型表示需要在任务间传递的信息)，不仅可以实现异步任务的同步，也可以在不同异步任务之间传递信息。
+var tcs = new TaskCompletionSource<string>();
+//2秒后，将setter.TaskStatus设置为RanToCompletion，且将一个字符串传递出去。
+var setter = Task.Run(() =>
+{
+    Thread.Sleep(2000);
+    tcs.SetResult("Setter completed!"); //由于我们声明的泛型是string，因此可以传递string。
+    //同样也可以将tcs的状态设置为cancel、exception等。
+    //SetResult只能执行一次，再次执行会抛异常。
+    if (!tcs.TrySetResult("Setter completed"))
+    {
+        Console.WriteLine("Do not set twice!");
+    }
+});
+
+//tcs.Task是tcs内部的一个属性，当tcs的Task属性被设置为RanToCompletion后，await tcs.Task就执行完毕了，接着可以执行后续代码，从而实现异步任务的同步机制。
+var waiter = Task.Run(async () =>
+{
+    var setterInfo = await tcs.Task;
+    Console.WriteLine($"Setter info received: {setterInfo}");
+});
+await Task.WhenAll(setter, waiter);
+//通过TaskCompletionSource，可以实现多个异步任务的同步执行，且可以在任务之间传递数据。
+#endregion
+
+#region 总结：在异步中实现同步机制
+//1. 传统的Thread很难实现不同线程之间的通信，但Task可以很容易实现这一点，从而实现异步任务的同步执行。
+//2. 传统的Thread中的锁，无法在Task中直接使用，需要借助第三方库或SemaphoreSlim。
+//3. 想要在异步中实现同步有两种方案，第一种是使用异步锁，第二种是使用信号量。
+#endregion
+
+
 
 class Foo
 {
@@ -954,7 +1043,7 @@ class MyDataModel
     async Task LoadDataAsync()
     {
         await Task.Delay(1000);
-        Data = Enumerable.Range(1,10).ToList();
+        Data = Enumerable.Range(1, 10).ToList();
         //throw new Exception("Data loading error!"); //模拟读取数据时发生异常。
     }
 
@@ -969,7 +1058,7 @@ class MyDataModel
     /// <param name="task"></param>
     /// <param name="onCompleted"></param>
     /// <param name="onError"></param>
-    async void SafeFireAndForget(Task task, Action? onCompleted= null, Action<Exception>? onError = null)
+    async void SafeFireAndForget(Task task, Action? onCompleted = null, Action<Exception>? onError = null)
     {
         try
         {
@@ -988,7 +1077,7 @@ class MyDataModel
     /// <param name="task"></param>
     private void OnDataLoaded(Task task)
     {
-        if(task.IsFaulted)
+        if (task.IsFaulted)
         {
             Console.WriteLine(task.Exception.InnerException); //失败的回调：这里抛出的是AggregateException，使用InnerException获取原本的异常。
         }
@@ -1050,4 +1139,61 @@ static class AsyncExtension
 }
 
 record Message(string ThreadName, string Msg);
+
+class CanNotUseLockInAsyncTask
+{
+    //private readonly object _lock = new();
+    //使用Nito.Asyncex提供的AsyncLock
+    private readonly AsyncLock _lock = new();
+
+    //initialCount:初始线程数
+    //maxCount:最大线程数
+    private readonly SemaphoreSlim _semaphore = new(10, 10);
+
+    /// <summary>
+    /// 原异步方法
+    /// </summary>
+    /// <param name="x"></param>
+    /// <returns></returns>
+    public async Task<int> HeayJobAsync(int x)
+    {
+        await Task.Delay(100);
+        return x * x;
+    }
+
+    /// <summary>
+    /// 利用Nito.Asyncex在异步任务中使用锁实现同步机制。
+    /// </summary>
+    /// <returns></returns>
+    public async Task<int> HeayJobLockAsync(int x)
+    {
+        //无法在一个lock语句中使用await：lock语句表达的意思是，其内部所有的操作，都必需要在一个单独的线程中完成，以保证对资源操作时不会有
+        //其他线程的干扰；但await语句并不能保证该异步任务内部全部都在一个线程中进行(回忆line260的异步任务)，因此会导致lock语句中进行线程切换，
+        //而这与lock的初衷相违背。另外await后续的代码默认情况下会切回到原线程中，这也同样会在lock语句中造成线程切换。
+        //lock (_lock) 
+        //{
+        //    //await Task.Delay(1000); //报错
+        //}
+
+        //使用Nito.Asyncex提供的lock
+        using (await _lock.LockAsync())
+        {
+            await Task.Delay(100);
+            return x * x;
+        }
+    }
+
+    /// <summary>
+    /// 使用SemaphoreSlim在异步任务中实现同步机制。
+    /// </summary>
+    /// <param name="x"></param>
+    /// <returns></returns>
+    public async Task<int> HeayJobSemaphoreSlim(int x)
+    {
+        await _semaphore.WaitAsync();
+        await Task.Delay(100);
+        _semaphore.Release();
+        return x * x;
+    }
+}
 #endregion

@@ -2,7 +2,7 @@
 
 #region 发布者订阅者模式：发布者定义一些列事件，订阅者订阅这些事件，并向发布者提供一些方法，当事件触发时，订阅者就会执行相应方法。基于委托。
 //订阅者提供的方法被称为回调方法。
-//A定义一个事件叫“闹铃响”，B订阅了该事件，并向该事件提供方法“起床”，当A触发“闹铃响”事件时，该事件行B所提供的方法“起床”。
+//A定义一个事件叫“闹铃响”，B订阅了该事件，并向该事件提供方法“起床”，当A触发“闹铃响”事件时，执行“起床”。
 //A：发布者；B：订阅者；“闹铃响”：事件；“起床”：回调方法。
 #endregion
 
@@ -17,11 +17,11 @@ Console.WriteLine($"Number of dozens: {dozens.DozensCount}");
 
 #region 在回调中传参
 //调用传参版本的事件。
-incrementer.DoCountWithArgs();
-Console.WriteLine($"Number of dozens: {dozens.DozensCount}");
-incrementer.CountedADozenWithArgs -= dozens.IncrementDozensCountWithArgs; //将incrementer.CountedADozenWithArgs事件和回调解绑定。
-incrementer.DoCountWithArgs(); //再次触发incrementer.CountedADozenWithArgs事件，回调并不会执行，因此dozens.DozensCount属性依然是18。
-Console.WriteLine($"Number of dozens: {dozens.DozensCount}");
+//incrementer.DoCountWithArgs();
+//Console.WriteLine($"Number of dozens: {dozens.DozensCount}");
+//incrementer.CountedADozenWithArgs -= dozens.IncrementDozensCountWithArgs; //将incrementer.CountedADozenWithArgs事件和回调解绑定。
+//incrementer.DoCountWithArgs(); //再次触发incrementer.CountedADozenWithArgs事件，回调并不会执行，因此dozens.DozensCount属性依然是18。
+//Console.WriteLine($"Number of dozens: {dozens.DozensCount}");
 #endregion
 
 

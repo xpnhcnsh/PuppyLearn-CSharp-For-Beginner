@@ -1,11 +1,11 @@
 ﻿//结构体、枚举、数组、枚举器和迭代器
 using System.Collections;
 #region struct和class：struct是值类型，不能派生其他结构；class是引用类型，可以派生其他类
-//struct存在栈中，而class的引用存在栈中，内部的值类型成员存放在栈中，引用类型成员存放在堆中，其引用存放在栈中。
+//struct存在栈中，class的引用存在栈中。对于struct和class：内部的值类型成员存放在栈中，引用类型成员存放在堆中，其引用存放在栈中。
 //struct有隐藏的无参构造，且无法被显示覆盖。程序员可以提供其他的有参构造。
 //class在程序员不提供显示构造函数时，具有隐式无参构造，一旦提供了任意的构造函数，就不存在隐式无参构造了。
 //ClassSample cs1 = new ClassSample(); //只有当不存在任何显示有参构造时，才存在无参构造，当有任何显示有参构造时，就不存在隐式无参构造了。
-//StructSample ss1 = new StructSample(); //调用struct的隐式无参构造.
+StructSample ss1 = new StructSample(); //调用struct的隐式无参构造.
 //StructSample ss2 = new StructSample(1, 2, null);
 //cs1.X = cs1.Y = 3;
 //Console.WriteLine($"{ss1.X}   {ss1.Y}   {StructSample.Z}   {ss1.Y}   {StructSample.M}");
@@ -24,9 +24,10 @@ using System.Collections;
 //1.通常struct用来表示小型数据结构，通常小于16Byte，如Point{int X, int Y}, DateTime等。
 //2.当数据不需要继承时，使用struct。
 //3.一旦创建对象后，数据结构不变的情况下，使用struct。
+//4.当对象会被经常传入函数进行计算时，使用class。
 #endregion
 
-#region 枚举：Enum是值类型，存在栈中。
+#region 枚举：Enum是值类型，存在栈中
 //默认第一个元素值为0，后续依次递增1，类型为int。
 //也可给其中任意元素赋值，后续依次递增1。
 //TrafficLight t1 = TrafficLight.Yellow;
@@ -48,12 +49,13 @@ using System.Collections;
 #endregion
 
 #region 数组(Array)：定长，如果长度总是变化，建议使用List。
-//int[] arr1 = new int[5];
-//arr1 = [1, 2, 3, 4, 5]; //.net8中可以使用：int[] arr1 = [1, 2, 3, 4, 5];
-//int[] arr2 = [1, 2, 3, 4, 5]; //也可以使用花括号。
+//int[] arr1 = new int[5]; //数组声明
+//arr1 = [1, 2, 3, 4, 5];  //数组赋值 
+//int[] arr2 = [1, 2, 3, 4, 5]; //.net8:声明+赋值
+////int[] arr = new int[] { 1, 2, 3, 4, 5 }; //也可以使用花括号。
 //int[,] arr3 = new int[2, 3] { { 1, 2, 3 }, { 4, 5, 6 } }; //int[,]表示声明一个二维数组，int[,,]表示声明一个三维数组。
 //int[,,] arr4 = new int[2, 2, 3] { { { 1, 2, 3 }, { 4, 5, 6 } },
-//                                { { 7, 8, 9 }, { 10, 11, 12 } }};
+//                               { { 7, 8, 9 }, { 10, 11, 12 } }};
 ////访问元素
 //Console.WriteLine(arr2[2]);
 //Console.WriteLine(arr3[1, 2]);
@@ -79,7 +81,7 @@ using System.Collections;
 //}
 #endregion
 
-#region Array VS List：Struct[]和List<Struct>均无法对原本的Struct元素进行更改，但可以修改集合里的元素，这是由于Struct的ValueType决定的；Class[]和List<Class>均可对集合里的元素和Class对象本身进行更改。
+#region Array VS List：Struct[]和List<Struct>均无法对原本的Struct元素进行更改，但可以修改集合里的元素，这是由于Struct的ValueType决定的；Class[]和List<Class>均可对集合里的元素和Class对象本身进行更改
 //Struct[] VS List<Struct>
 //StructSample a = new();
 //a.X = 1;
@@ -94,6 +96,7 @@ using System.Collections;
 //static void UpdateList(List<StructSample> input)
 //{
 //    //input[0].X = 200; //编译错误。
+//    //input[0] = new StructSample { X = 200 };
 //    //想要修改List<struct>的元素，只能使用新的struct替代原来的struct，无法直接修改其值。
 //    StructSample temp = new StructSample();
 //    temp.X = 200;
@@ -127,25 +130,25 @@ using System.Collections;
 //Console.WriteLine($"{listClass[0].X}   {b.X}"); //同时修改了listClass[0].X和b.X。
 
 //总结：
-//1.使用一个集合去存储对象，如果这个集合中的元素会被修改，且改变希望能够使原本的对象也相应修改，那么对象最好使用class而不是struct。
+//1.使用一个集合去存储对象，如果这个集合中的元素会被修改，且改变希望能够使原本的对象也相应修改，那么对象使用class而不是struct。
 //2.如果一个集合的元素个数不确定，或个数会变化，使用List而非Array。
 //3.高性能要求、对象数量多、生命周期短，由于struct不使用GC，因此创建和销毁对象的开销远小于class。
 //4.如果对象很大，使用class，因为struct在赋值或参数传递时会复制副本，因此如果对象很大，复制的开销会很大。
 #endregion
 
-#region 交错数组(Jagged Array)：不同维度的数组元素个数可以不同。
-//int[][] jagArr1 = new int[3][];
+#region 交错数组(Jagged Array)：不同维度的数组元素个数可以不同
+//int[][] jagArr1 = new int[3][]; //
 //jagArr1[0] = [1, 2, 3];
 //jagArr1[1] = [1, 2, 3, 4];
 //jagArr1[2] = [1, 2];
 
-//int[][] jagArr2 =
-//[
-//    [1, 3, 5, 7, 9],
-//    [0, 2, 4, 6],
-//    [11, 22]
-//];
-//jagArr2[0][1] = 77;
+////int[][] jagArr2 =
+////[
+////    [1, 3, 5, 7, 9],
+////    [0, 2, 4, 6],
+////    [11, 22]
+////];
+////jagArr2[0][1] = 77;
 
 //int[][,] jagArr3 =
 //[
@@ -153,10 +156,10 @@ using System.Collections;
 //    new int[,] { {0,2}, {4,6}, {8,10} },
 //    new int[,] { {11,22}, {99,88}, {0,9} }
 //];
-//Console.WriteLine("{0}", jagArr3[0][1, 0]);
+//Console.WriteLine("{0},{1}", jagArr3[0][1, 0], jagArr3[0][0, 0]);
+//Console.WriteLine($"{jagArr3[0][1, 0]}");
 //Console.WriteLine(jagArr3.Length);
 #endregion
-
 
 #region 枚举器：Enumerator
 //实现了IEnumerable接口的类，可以使用for loop或foreach语句去循环遍历，原因是其中的GetEnumerator()方法返回一个枚举器，枚举器可以依次返回集合中的一个对象。
@@ -186,7 +189,7 @@ using System.Collections;
 //}
 #endregion
 
-#region 在类中实现IEnumerator和IEnumerable。
+#region 在类中实现IEnumerator和IEnumerable
 //1.创建一个枚举器，即写一个类，实现IEnumerator接口。
 //2.创建一个类，实现IEnumerable接口，在其中的GetEnumerator()方法中，返回自己写的枚举器。这个类就可以和List或Array一样使用ForEach去遍历了。
 //RainBowV1 rainBowV1 = new RainBowV1();
@@ -195,17 +198,19 @@ using System.Collections;
 //    Console.Write(color + " ");
 #endregion
 
-#region 迭代器：Iterator，通过yield return生成Enumerator; Python中叫生成器(Generator)。
+#region 迭代器：Iterator，通过yield return生成Enumerator; Python中叫生成器(Generator)
 //无需实现IEnumerator中的属性和方法即可生成Enumerator。
 //RainBowV2 rainBowV2 = new RainBowV2();
 //Console.WriteLine();
 //foreach (string color in rainBowV2)
 //    Console.Write(color + " ");
+//foreach (string color in rainBowV2.Colors())
+//    Console.Write(color + " ");
 #endregion
 
-#region 迭代器：yield return本质是延迟执行(延迟计算)，只有需要获取计算结果时，才执行yield return语句。
+#region 迭代器：yield return本质是延迟执行(延迟计算)，只有需要获取计算结果时，才执行yield return语句
 //假设有一个集合，里面有无限的元素，如果需要遍历这个集合，传统方法是将这个集合全部放在内存中，然后使用指针去内存遍历；
-//但内存是有限的，无限个元素实际上无法被放到内存里，这时就需要延迟计算，即只有当遍历到某个元素时，才将去计算它并存放在内存中，然后再去遍历它，
+//但内存是有限的，无限个元素实际上无法被放到内存里，这时就需要延迟计算，即只有当遍历到某个元素时，才去计算它并存放在内存中，然后再去遍历它，
 //集合中没有被遍历到的元素，都不需要提前计算好存入内存。这样即使有一个很大的集合，也不需要在实际需要某个元素之前，就把集合整体都存放在内存中，从而节省内存。
 //使用return遍历斐波那契数列：
 //运行后打开Task Manager，会发现内存使用量很快到100%且电脑可能会因此卡住。这是因为List过大将内存占满了。注意观察内存使用情况，及时关闭程序！！！！
@@ -214,8 +219,6 @@ using System.Collections;
 
 //使用yield return编列斐波那契数列：
 //发现内存占用并没有明显升高，程序运行正常
-//注意不要使用下面这种方式去接收，这和前面使用List一样，会将集合全部存在变量fibov2中，失去了使用yield return的作用。
-//var fibov2 = PrintFibonacciV2(99999999999999); 
 //foreach (long i in FibonacciV2(99999999999999))
 //{
 //    //可以在一个遍历一个无限序列时加入一些判断逻辑，当符合逻辑时，跳出遍历。
@@ -253,7 +256,7 @@ static List<long> FibonacciV1(long n)
     List< long> temp = new List<long>();
     long current = 0;
     long next = 1;
-    while (n > 0 )
+    while (n > 0)
     {
         temp.Add(current);
         long oldCurrent = current;
@@ -349,8 +352,8 @@ class User
     /// <returns></returns>
     public bool HasAttributes(UserPortrait p)
     {
-        return (p & _portrait) == p; //按位与
-        //return _portrait.HasFlag(p); //enum.HasFlag()方法
+        //return (p & _portrait) == p; //按位与
+        return _portrait.HasFlag(p); //enum.HasFlag()方法
     }
 
     private int _setValue() => Portrait switch
@@ -385,7 +388,7 @@ enum TrafficLight
 
 enum TrafficLightLong : long
 {
-    Green,
+    Green = 0,
     Red = 5,
     Yellow
 }
@@ -408,9 +411,9 @@ class ColorEnumerator : IEnumerator
         get
         {
             if (position == -1)
-                throw new InvalidOperationException();
+                throw new IndexOutOfRangeException();
             if (position > _colors.Length)
-                throw new InvalidOperationException();
+                throw new IndexOutOfRangeException();
             return _colors[position];
         }
     }
@@ -453,5 +456,10 @@ class RainBowV2 : IEnumerable
     {
         foreach (var item in _colors)
             yield return item;
+    }
+
+    public string[] Colors()
+    {
+        return _colors;
     }
 }
