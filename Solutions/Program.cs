@@ -82,7 +82,7 @@
 #endregion
 
 #region Quiz11:数组查重
-//Console.WriteLine(Sol11.ContainsDuplicate<string>(["1", "2", "3", "4"])); 
+//Console.WriteLine(Sol11.ContainsDuplicate<string>(["1", "2", "3", "4" ,"1"])); 
 #endregion
 
 #region Quiz12:第N大的数
