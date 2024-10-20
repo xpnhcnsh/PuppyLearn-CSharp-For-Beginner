@@ -889,27 +889,27 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 //await Task.WhenAll(setter, waiter);
 
 //2. 使用TaskCompletionSource(泛型表示需要在任务间传递的信息)，不仅可以实现异步任务的同步，也可以在不同异步任务之间传递信息。
-var tcs = new TaskCompletionSource<string>();
-//2秒后，将setter.TaskStatus设置为RanToCompletion，且将一个字符串传递出去。
-var setter = Task.Run(() =>
-{
-    Thread.Sleep(2000);
-    tcs.SetResult("Setter completed!"); //由于我们声明的泛型是string，因此可以传递string。
-    //同样也可以将tcs的状态设置为cancel、exception等。
-    //SetResult只能执行一次，再次执行会抛异常。
-    if (!tcs.TrySetResult("Setter completed"))
-    {
-        Console.WriteLine("Do not set twice!");
-    }
-});
+//var tcs = new TaskCompletionSource<string>();
+////2秒后，将setter.TaskStatus设置为RanToCompletion，且将一个字符串传递出去。
+//var setter = Task.Run(() =>
+//{
+//    Thread.Sleep(2000);
+//    tcs.SetResult("Setter completed!"); //由于我们声明的泛型是string，因此可以传递string。
+//    //同样也可以将tcs的状态设置为cancel、exception等。
+//    //SetResult只能执行一次，再次执行会抛异常。
+//    if (!tcs.TrySetResult("Setter completed"))
+//    {
+//        Console.WriteLine("Do not set twice!");
+//    }
+//});
 
-//tcs.Task是tcs内部的一个属性，当tcs的Task属性被设置为RanToCompletion后，await tcs.Task就执行完毕了，接着可以执行后续代码，从而实现异步任务的同步机制。
-var waiter = Task.Run(async () =>
-{
-    var setterInfo = await tcs.Task;
-    Console.WriteLine($"Setter info received: {setterInfo}");
-});
-await Task.WhenAll(setter, waiter);
+////tcs.Task是tcs内部的一个属性，当tcs的Task属性被设置为RanToCompletion后，await tcs.Task就执行完毕了，接着可以执行后续代码，从而实现异步任务的同步机制。
+//var waiter = Task.Run(async () =>
+//{
+//    var setterInfo = await tcs.Task;
+//    Console.WriteLine($"Setter info received: {setterInfo}");
+//});
+//await Task.WhenAll(setter, waiter);
 //通过TaskCompletionSource，可以实现多个异步任务的同步执行，且可以在任务之间传递数据。
 #endregion
 
@@ -919,8 +919,33 @@ await Task.WhenAll(setter, waiter);
 //3. 想要在异步中实现同步有两种方案，第一种是使用异步锁，第二种是使用信号量。
 #endregion
 
+#region ValueTask的使用
+//一个常见的异步操作场景：首先在缓存中查看所需的数据是否存在，如果存在，直接返回缓存中的值；如果不存在，执行异步任务读取数据库里的值并返回。
+//在这个场景中，如果缓存命中，那么实际上只返回一个值即可，无需返回一个Task（相比直接返回结果，Task具有更大的内存开销），但如果缓存命中失败，就需要调用异步任务返回一个Task。
+//var ValueTaskDemo = new ValueTaskDemo();
+//var res = await ValueTaskDemo.GetAsync(2); //首先去cache里获取key=2；cache未命中，执行异步操作，并将key=2添加到cache
+//Console.WriteLine(res);
+//ValueTaskDemo.ShowCache(); //这时发现key=2已经被添加到Cache中
 
+////以上场景，推荐使用ValueTask<T>作为返回值。
+//res = await ValueTaskDemo.GetValueTaskAsync(3);
+////注意：不要阻塞ValueTask，也就是说，不要对一个ValueTask对象使用.Result、.Wait()、.GetAwaiter().GetResult()
+////如果一定要阻塞，那么先使用IsCompleted判断任务状态，在完成时才使用以上阻塞的方式获取结果。例如：
+////var task = ValueTaskDemo.GetValueTaskAsync(3);
+////if (task.IsCompleted)
+////{
+////    Console.WriteLine(task.Result);
+////}
+//Console.WriteLine(res);
+//ValueTaskDemo.ShowCache(); //key=3被添加到Cache中
+#endregion
 
+#region 使用IProgress进行进度汇报：见Ch1_L12_Supplymentary，使用winform项目进行演示
+//异步任务的执行过程中，对外界进行进度汇报。
+#endregion
+
+#region 如何在异步任务中调用并取消一个长时间运行的同步方法：Thread+Task
+#endregion
 class Foo
 {
     /// <summary>
@@ -1194,6 +1219,67 @@ class CanNotUseLockInAsyncTask
         await Task.Delay(100);
         _semaphore.Release();
         return x * x;
+    }
+}
+
+class ValueTaskDemo
+{
+    private ConcurrentDictionary<int, string> _cache = new();
+
+    public ValueTaskDemo()
+    {
+        //如果不存在(1,"北京大学")就添加，否则将value改为"清华大学"
+        _cache.AddOrUpdate(1, k => "北京大学", (k, v) => "北京大学");
+        //_cache.AddOrUpdate(1, k => "北京大学", (k, v) => "清华大学");
+    }
+
+    public void ShowCache()
+    {
+        foreach (var (k, v) in _cache)
+        {
+            Console.WriteLine($"{k}: {v}");
+        }
+    }
+
+    private async Task<string> GetFromDbAsync()
+    {
+        await Task.Delay(1000);
+        return "清华大学";
+    }
+
+    /// <summary>
+    /// 如果缓存命中，那么代码不会执行到await语句，那么这个异步任务，实际上返回的是同步内容；只有当缓存未命中，才会执行await代码，执行真正的异步任务。
+    /// 这时如果使用Task<string>作为返回值，当缓存命中时，原本只需要返回string即可，但实际上需要包装成Task<string>，造成了额外的开销。
+    /// </summary>
+    /// <param name="k"></param>
+    /// <returns></returns>
+    public async Task<string> GetAsync(int k)
+    {
+        string v = string.Empty;
+        if (_cache.TryGetValue(k, out v))
+        {
+            return v;
+        }
+        v = await GetFromDbAsync();
+        _cache.TryAdd(k, v);
+        return v;
+    }
+
+    /// <summary>
+    /// 相比Task<string>，ValueTask<string>会判断返回值类型，只有在真正执行await后，才会返回Task，否则只返回string，从而降低了开销。
+    /// </summary>
+    /// <param name="k"></param>
+    /// <returns></returns>
+    public async ValueTask<string> GetValueTaskAsync(int k)
+    {
+        string v = string.Empty;
+        if (_cache.TryGetValue(k, out v))
+        {
+            return v;
+        }
+        v = await GetFromDbAsync();
+        _cache.TryAdd(k, v);
+        return v;
     }
 }
 #endregion
