@@ -2,18 +2,18 @@
 using System.Collections;
 
 #region 泛型：将类型参数化(type-parameterized)，使用类型占位符写代码，在创建实例时才指明真实的类型。
-//MyStackV1 myStackV1 = new MyStackV1();
+MyStackV1 myStackV1 = new MyStackV1();
 //myStackV1.Push(1);
 //myStackV1.Push(2);
 //myStackV1.Push(3);
 //Console.WriteLine(myStackV1.Pop());
 //myStackV1.PrintStatck();
 
-//MyStackV2<double> myStackV2 = new(); //使用<double>指定真实的类型。
+MyStackV2<double> myStackV2 = new(); //使用<double>指定真实的类型。
 //myStackV2.Push(1.1);
 //myStackV2.Push(2.2);
 //myStackV2.Push(3.3);
-//Console.WriteLine(myStackV2.Pop(out double res));
+//Console.WriteLine(myStackV2.Pop(out double res).ToString() + "  " + res);
 //myStackV2.PrintStatck();
 #endregion
 
@@ -34,8 +34,8 @@ using System.Collections;
 //string[] stringArray = ["C++", "C#", "Java", "TypeScript"];
 //IPerson[] studentArray = [new Student(3, "Peter"), new Student(1, "Sam"), new Student(2, "Jay")];
 //Utility.SortNPrint(intArray);
-//Utility.SortNPrint<string>(stringArray); //泛型可省略。
-//Utility.SortNPrint<IPerson>(studentArray);
+//Utility.SortNPrint(stringArray); //泛型可省略。
+//Utility.SortNPrint(studentArray);
 #endregion
 
 #region 扩展方法中的泛型
@@ -62,7 +62,7 @@ using System.Collections;
 #region 泛型委托
 //泛型类声明
 //var mySum = new Func<int, int, int>(Calculator.Sum);
-//Console.WriteLine(mySum(10, 15)); 
+//Console.WriteLine(mySum(10, 15));
 //var myProduct = Calculator.Product;
 //Console.WriteLine(myProduct(10, 15));
 #endregion
@@ -75,42 +75,42 @@ using System.Collections;
 
 #region 协变与逆变(convariance & contravariance)：只针对委托和接口
 #region 协变:委托
-static Dog MakeDog()
-{
-    return new Dog();
-}
-Factory<Dog> dogMaker = MakeDog; //创建一个委托dogMaker。
-Factory<Animal> animalMaker = dogMaker; //创建一个新的委托animalMaker，其指向dogMaker。
+//static Dog MakeDog()
+//{
+//    return new Dog();
+//}
+//Factory<Dog> dogMaker = MakeDog; //创建一个委托dogMaker。
+//Factory<Animal> animalMaker = dogMaker; //创建一个新的委托animalMaker，其指向dogMaker。
 //注意，dogMaker的参数是Dog类型，是Animal的子类；animalMaker的参数是Animal类型，是Dog的父类。
-//如果委托中没有out关键字，那么84行会报错，提示"Can't implicitly convert from Factory<Dog> to Factory<Animal>"。
+//如果委托中没有out关键字，那么83行会报错，提示"Can't implicitly convert from Factory<Dog> to Factory<Animal>"。
 //dogMaker委托返回值是Dog类型，按理说Dog类型可以使用一个父类(Animal类)去接收，但实际上这里的关系是Factory<Dog>和Factory<Animal>，而非Dog和Animal。
 //在委托中返回值是泛型T，如果要用一个派生程度小的泛型委托去接收一个派生程度大的泛型委托，需要在委托中用out关键字标记泛型参数。
 #endregion
 
 #region 逆变：委托
-static void ActionOnAnimal(Animal a)
-{
-    Console.WriteLine(a.Legs);
-}
-Action1<Animal> act1 = ActionOnAnimal;
-Action1<Dog> dog1 = act1;
-dog1(new Dog());
-//如果委托中没有in关键字，那么97行会报错，提示"Can't implicitly convert from Action1<Animal> to Action1<Dog>"。
+//static void ActionOnAnimal(Animal a)
+//{
+//    Console.WriteLine(a.Legs);
+//}
+//Action1<Animal> act1 = ActionOnAnimal;
+//Action1<Dog> dog1 = act1;
+//dog1(new Dog());
+//如果委托中没有in关键字，那么96行会报错，提示"Can't implicitly convert from Action1<Animal> to Action1<Dog>"。
 //在委托中参数是泛型T，如果要用一个派生程度大的泛型委托去接收一个派生程度小的泛型委托，需要在委托中用in关键字标记泛型参数。
 #endregion
 
 #region 协变：接口
 //这里只看第一个泛型参数。
-SimpleReturn<Dog, Animal> dogReturner = new SimpleReturn<Dog, Animal>();
-dogReturner.items[0] = new Dog();
-IMyInterface<Animal, Animal> animalReturner = dogReturner; //IMyInterface<T1,T2>的T1参数需要标记为out，否则报错。
+//SimpleReturn<Dog, Animal> dogReturner = new SimpleReturn<Dog, Animal>();
+//dogReturner.items[0] = new Dog();
+//IMyInterface<Animal, Animal> animalReturner = dogReturner; //IMyInterface<T1,T2>的T1参数需要标记为out，否则报错。
 #endregion
 
 #region 逆变：接口
 //这里只看第二个泛型参数。
-SimpleReturn<Dog, Animal> animalReturner2 = new SimpleReturn<Dog, Animal>();
-IMyInterface<Dog, Dog> DogReturner2 = animalReturner2; //IMyInterface<T1,T2>的T2参数需要标记为in，否则报错。
-DogReturner2.SetFirt(new Dog());
+//SimpleReturn<Dog, Animal> animalReturner2 = new SimpleReturn<Dog, Animal>();
+//IMyInterface<Dog, Dog> DogReturner2 = animalReturner2; //IMyInterface<T1,T2>的T2参数需要标记为in，否则报错。
+//DogReturner2.SetFirt(new Dog());
 #endregion
 
 //总结：
@@ -122,11 +122,13 @@ DogReturner2.SetFirt(new Dog());
 
 /// <summary>
 /// 只能用于存int的stack。如果需要针对其他类型，那么每种类型都需要重新实现。
+/// FILO: Fisrt in Last out 先进后出
 /// </summary>
+/// <remarks>查看V2版本的<see cref="MyStackV2{T}"/></remarks>
 /// 
 class MyStackV1
 {
-    private int _statckPointer = 0;
+    private int _statckPointer = 0; //时刻指向栈顶的位置
     private int[] _statckArray;
     private const int _maxStack = 10;
     public bool IsStatckFull { get { return _statckPointer >= _maxStack; } }
@@ -216,6 +218,10 @@ class Roster<T> where T : IPerson
     public ArrayList Value { get => _roster; set { _roster = value; } }
     public string RosterType { get; set; } = null!;
 
+    /// <summary>
+    /// 将input添加到Roster集合里。
+    /// </summary>
+    /// <param name="input"></param>
     public void Add(IPerson input)
     {
         if (_roster.Count < _maxCount)
@@ -247,7 +253,7 @@ class Roster<T> where T : IPerson
 /// IPerson<T>是一个泛型接口，其Id属性的类型是T。
 /// </summary>
 /// <typeparam name="T"></typeparam>
-interface IPerson : IComparable, IComparable<IPerson>
+interface IPerson: IComparable, IComparable<IPerson>
 {
     public int Id { get; set; }
     public string Name { get; set; }
@@ -284,12 +290,12 @@ abstract class Person : IPerson
     /// 实现IComparable接口。
     /// </summary>
     /// <param name="obj"></param>
-    /// <returns></returns>
+    /// <returns>-1:this &lt; other; 1:this &gt; other; 0: this = other</returns>
     /// <exception cref="ArgumentException"></exception>
     public int CompareTo(object? obj)
     {
         if (obj != null && !(obj is IPerson))
-            throw new ArgumentException("Object must be of type IStudent!");
+            throw new ArgumentException("Object must be of type IPerson!");
         return CompareTo(obj as IPerson);
     }
 
@@ -309,8 +315,6 @@ class Student : Person
 {
     public Student(int id, string name) : base(id, name)
     {
-        Id = id;
-        Name = name;
     }
 }
 

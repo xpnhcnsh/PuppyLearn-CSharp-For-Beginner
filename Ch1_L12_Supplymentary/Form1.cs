@@ -20,7 +20,7 @@ namespace Ch1_L12_Supplymentary
                 //以下演示四种Task的调用方法：
 
                 //1.1.正确用法：默认情况下ConfigureAwait(true)
-                //await DoJobAsync();
+                await DoJobAsync();
 
                 //1.2.ConfigureAwait(false)时：
                 //使用SynchronizationContext.Current将UI线程所在的同步上下文传入方法，在方法内部操作progressBar对象。

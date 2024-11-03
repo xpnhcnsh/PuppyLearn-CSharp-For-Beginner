@@ -48,7 +48,7 @@
             runBtn.TabIndex = 1;
             runBtn.Text = "Run";
             runBtn.UseVisualStyleBackColor = true;
-            runBtn.Click += runBtn_Click;
+            runBtn.Click += runBtn_Click; //事件的回调列表 += 回调函数
             // 
             // richTextBox
             // 

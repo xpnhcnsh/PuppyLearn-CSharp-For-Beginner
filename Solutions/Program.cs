@@ -86,5 +86,5 @@
 #endregion
 
 #region Quiz12:第N大的数
-Console.WriteLine(Sol12.ThirdBiggest([1,1,1]));
+Console.WriteLine(Sol12.ThirdBiggest([1,2,3,4,1,2,3], 3));
 #endregion
