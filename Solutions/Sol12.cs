@@ -1,19 +1,13 @@
-﻿namespace Solutions
+﻿using MyUtilities;
+
+namespace Solutions
 {
     internal class Sol12
     {
-        public static int ThirdBiggest(int[] nums)
+        public static int ThirdBiggest(int[] nums, int k)
         {
-            SortedSet<int> container = new();
-            foreach (int num in nums)
-            {
-                container.Add(num);
-                if (container.Count > 3)
-                {
-                    container.Remove(container.Min);
-                }
-            }
-            return container.Count == 3 ? container.Min : container.Max;
+            var hashSet = nums.ToHashSet().OrderDescending();
+            return hashSet.Count() >= 3 ? hashSet.ToList()[k-1]: hashSet.Max();
         }
     }
 }

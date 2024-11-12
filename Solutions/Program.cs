@@ -1,4 +1,5 @@
-﻿using Solutions;
+﻿using MyUtilities;
+using Solutions;
 
 #region Quiz1:虚数四则运算
 //Sol1.Imaginary v1 = new Sol1.Imaginary(3, 3);
@@ -82,9 +83,29 @@
 #endregion
 
 #region Quiz11:数组查重
-//Console.WriteLine(Sol11.ContainsDuplicate<string>(["1", "2", "3", "4"])); 
+//Console.WriteLine(Sol11.ContainsDuplicate<string>(["1", "2", "3", "4" ,"1"])); 
 #endregion
 
 #region Quiz12:第N大的数
-Console.WriteLine(Sol12.ThirdBiggest([1,1,1]));
+//Console.WriteLine(Sol12.ThirdBiggest([1,2,3,4,1,2,3], 3));
+#endregion
+
+#region Quiz13:Linq
+var Sol13 = new Sol13();
+string[] Schools = ["Yale", "HeiBeiNormal", "Harvard", "Stanfords", "Cambridge", "TSINGHUA"];
+#region 1 Reorder
+Sol13.Reorder(Schools).Show();
+#endregion
+
+#region 2 GroupBy
+Sol13.Census(Schools);
+#endregion
+
+#region 3 Shuffle
+Sol13.Shuffle(Schools).Show();
+#endregion
+
+#region 4 FindCapitals
+Sol13.FindCapitals(Schools);
+#endregion
 #endregion
