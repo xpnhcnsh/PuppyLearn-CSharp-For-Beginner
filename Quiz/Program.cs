@@ -49,3 +49,10 @@
 
 //Quiz12：
 //输入一个非空整数数组nums，返回其中第三大的整数；如果不存在第三大的整数，返回最大值；
+
+//Quiz13:
+//string[] Schools = ["Yale", "HeiBeiNormal", "Harvard", "Stanfords", "Cambridge", "TSINGHUA"];
+//1:将Schools重新排序，要求按照字母个数从小到大排序，字母个数相同时，按照字母表顺序排列。
+//2.统计Schools中每个字母出现的次数，并按照从少到多打印，个数相同的字母按照字母表顺序打印。
+//3.乱序排列Schools。
+//4.找到其中全大写的元素。

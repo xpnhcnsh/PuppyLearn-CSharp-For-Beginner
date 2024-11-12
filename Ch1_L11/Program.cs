@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
-//查询出大于20的偶数，并返回升序集合。
+//查询出大于20的偶数，并返回降序集合。
 
 //传统方法：提前准备好容器，遍历后将符合逻辑的元素放入容器，然后执行Sort和Reverse。
 //List<int> res1 = new List<int>();
@@ -49,8 +49,8 @@ IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
 //    Console.Write(x + " ");
 //    return x * x;
 //});
-//这时直接运行程序，发现并没有执行以上代码。
-//res3.ToArray()消耗了res3这个query，触发了代码的执行。
+////这时直接运行程序，发现并没有执行以上代码。
+////res3.ToArray()消耗了res3这个query，触发了代码的执行。
 //res3.ToArray();
 //Console.WriteLine("Finish"); //注释掉res3.ToArray();程序会直接打印Finish，说明res3在不被消耗的情况下是不会执行的。
 #endregion
@@ -87,12 +87,12 @@ IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
 
 #region 展平(Flatten)
 //jagged array
-//var mat = new int[][]
-//{
-//    [1,2,3],
-//    [1,2,3,4,5],
-//    [1,2,3,4,5,6],
-//};
+var mat = new int[][]
+{
+    [1,2,3],
+    [1,2,3,4,5],
+    [1,2,3,4,5,6],
+};
 
 //普通方法
 //int count = 0;
@@ -159,17 +159,17 @@ IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
 #endregion
 
 #region 差集(Except)、交集(Intersect)、并集(Union)
-//int[] arr1 = [1, 2, 3, 4, 10];
-//int[] arr2 = [3, 8, 10, 2, 12];
-//Student[] students1 = [new Student("Peter", 10, 90, true), new Student("Sam", 12, 100, true)];
-//Student[] students2 = [new Student("May", 10, 90, false), new Student("Sam", 12, 100, true)];
+int[] arr1 = [1, 2, 3, 4, 10];
+int[] arr2 = [3, 8, 10, 2, 12];
+Student[] students1 = [new Student("Peter", 10, 90, true), new Student("Sam", 12, 100, true)];
+Student[] students2 = [new Student("May", 10, 90, false), new Student("Sam", 12, 100, true)];
 
 //差集：普通方法
 //List<int> res1 = new List<int>();
 //foreach (int x in arr1)
 //{
 //    if (!arr2.Contains(x))
-//        res1.Add(x); 
+//        res1.Add(x);
 //}
 //res1.Show();
 
@@ -180,7 +180,7 @@ IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
 
 //由于Student是引用类型，判断引用类型是否相同是判断其地址，因此student1和student2里的Sam实际是两个对象有不同的地址
 //这种情况下Contains()函数就失效了。这时需要使用Contains()方法的重载，传入一个IEqualityComparer<Student>对象，其定义了两个Student对象的比较方式。
-//var StudentComparer = new StudentComparer();
+var StudentComparer = new StudentComparer();
 //(from x in students1
 // where !students2.Contains(x, StudentComparer)
 // select x).Show();
@@ -196,7 +196,7 @@ IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
 //交集：Linq Chained expression
 //arr1.Intersect(arr2).Show();
 //students1.Intersect(students2, StudentComparer).Show();
-//IntersectBy:
+////IntersectBy:
 //students1.IntersectBy(students2.Select(x => (x.Name, x.Gender, x.BMI, x.Age)), y => (y.Name, y.Gender, y.BMI, y.Age)).Show();
 
 //并集：Linq Chained expression，注意Union会自动去重
@@ -218,21 +218,21 @@ IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
 //    x.Value.Show();
 //}
 
-////统计集合里每个字母出现的次数并升序排列，出现次数相同时，按照字母顺序排列
+//统计集合里每个字母出现的次数并升序排列，出现次数相同时，按照字母顺序排列
 //string[] words = ["tom", "jerry", "mikky", "tutor"];
-//var a =words.SelectMany(x => x).GroupBy(x => x);
+////var a = words.SelectMany(x => x).GroupBy(x => x);
 //words.SelectMany(x => x).GroupBy(x => x).Select(x => new { Word = x.Key, Count = x.Count() }).OrderBy(x => x.Count).ThenBy(x => x.Word).Show();
 //Select语句中产生了一个匿名对象。
 #endregion
 
 #region First() FirstOrDefault() Last() Single() SingleOrDefault()
 
-//Student[] students = [new Student("Peter", 10, 90, true), new Student("Sam", 12, 100, true), new Student("Peter", 20, 80, false)];
+Student[] students = [new Student("Peter", 10, 90, true), new Student("Sam", 12, 100, true), new Student("Peter", 20, 80, false)];
 ////First()返回符合条件的第一个元素，如果不存在抛出异常。
-////var res1 = students.First(x => x.Name == "May"); //会抛出一个异常，可以使用try catch去捕捉。
-////First()返回符合条件的第一个元素，如果不存在返回默认值。对于引用类型返回null，数值类型返回0。
+//var res1 = students.First(x => x.Name == "May"); //会抛出一个异常，可以使用try catch去捕捉。
+////FirstOrDefault()返回符合条件的第一个元素，如果不存在返回默认值。对于引用类型返回null，数值类型返回0。
 //var res2 = students.FirstOrDefault(x => x.Name == "May");
-////Console.WriteLine(res1);
+//Console.WriteLine(res2);
 //Console.WriteLine(res2 == null);
 
 ////返回符合条件的一个元素，如果存在多个元素或无符合条件的元素，抛出异常。
@@ -269,9 +269,9 @@ IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
 #endregion
 
 #region Zip:将两个集合合并成一个，如果两个集合个数不同，多余的元素被忽略。
-//int[] num = [1, 2, 3];
-//string[] name = ["one", "two", "three", "four"];
-//num.Zip(name).Show();
+//int[] num = [1, 2, 3,4];
+//string[] name = ["one", "two", "three"];
+//num.Zip(name).Show(); //tuple元组
 //num.Zip(name, (x, y) => $"{x}={y}").Show();
 #endregion
 
@@ -290,30 +290,30 @@ IEnumerable<int> intCollection1 = [90, 2, 23, 88, 9, 22, 7, 64, 39, 20];
 #endregion
 
 #region ToLookup:创建一个查找对象，在被调用时才去查询。
-//string[] array = { "ONE", "two", "three" };
-//// 根据元素字符串长度创建一个查找对象
+//string[] array = { "OnE", "two", "three" };
+////// 根据元素字符串长度创建一个查找对象
 //var lookup1 = array.ToLookup(item => item.Length);
-//// 查找字符串长度为 3 的元素
+////// 查找字符串长度为 3 的元素
 //lookup1[3].Show();
 
-////根据字符串大小写创建查找对象，输入true表示查询全部是小写的字符串；false表示查询全部是大写的字符串
-//var LookupLowerCase = array.ToLookup(item => item.Select(x => char.IsLower(x)).Any(x => x == true));
-//LookupLowerCase[false].Show();
+//////根据字符串大小写创建查找对象，输入true表示查询全部是小写的字符串；false表示查询全部是大写的字符串
+//var LookupLowerCase = array.ToLookup(item => item.Select(x => char.IsLower(x)).All(x => x == true));
+//LookupLowerCase[true].Show();
 #endregion
 
 #region Any()
-var rnd = new Random(1000);
-//产生一个10000个随机数的集合，并判断其中是否有大于5000的数。
-var collection = Enumerable.Range(0, 100000000).Select(x => rnd.Next(10000));
-Stopwatch sw = Stopwatch.StartNew();
-sw.Start();
-Console.WriteLine(collection.Count(x => x > 5000) > 0); //Count会遍历所有collection，因此如果collection很大就会很耗时。时间复杂度总是O(n)。
-sw.Stop();
-Console.WriteLine(sw.ElapsedMilliseconds);
-sw.Restart();
-Console.WriteLine(collection.Any(x => x > 5000)); //Any则会在找到第一个大于5000的数时就返回true，不会继续遍历后面的元素，只有在最差的情况下才是O(n)。
-sw.Stop();
-Console.WriteLine(sw.ElapsedMilliseconds);
+//var rnd = new Random(1000);
+////产生一个10000个随机数的集合，并判断其中是否有大于5000的数。
+//var collection = Enumerable.Range(0, 100000000).Select(x => rnd.Next(10000));
+//Stopwatch sw = Stopwatch.StartNew();
+//sw.Start();
+//Console.WriteLine(collection.Count(x => x > 5000) > 0); //Count会遍历所有collection，因此如果collection很大就会很耗时。时间复杂度总是O(n)。
+//sw.Stop();
+//Console.WriteLine(sw.ElapsedMilliseconds);
+//sw.Restart();
+//Console.WriteLine(collection.Any(x => x > 5000)); //Any则会在找到第一个大于5000的数时就返回true，不会继续遍历后面的元素，只有在最差的情况下才是O(n)。
+//sw.Stop();
+//Console.WriteLine(sw.ElapsedMilliseconds);
 #endregion
 #endregion
 
