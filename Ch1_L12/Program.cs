@@ -945,7 +945,49 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 #endregion
 
 #region 如何在异步任务中调用并取消一个长时间运行的同步方法：Thread+Task
+
+//方案1.使用一个超时任务，和LongRunningJob一起调用，期待当超时任务结束时，LongRunningJob也一起被取消掉：
+//var start = Stopwatch.GetTimestamp();
+//var task1 = Task.Run(LongRunningJob);
+//var task2 = Task.Delay(1000);
+//await Task.WhenAny(task1, task2);
+//var elapsed = Stopwatch.GetElapsedTime(start);
+//Console.WriteLine($"Elapsed:{elapsed}");
+//Console.WriteLine("Done");
+//Console.ReadKey(); //发现：1秒后“Done”被打印出来，3秒后"Long running job completed!"被打印出来
+                   //这表示，task2并没有因为task1结束而结束，WhenAny并没有取消LongRunningJob，LongRunningJob依然在后台执行。
+
+//假设这是一个无法修改的耗时方法，比如从其他库中调用的函数。
+static void LongRunningJob()
+{
+    Thread.Sleep(3000);
+    Console.WriteLine("Long running job completed!");
+}
+
+//方案2.使用Thread来运行LongRunningJob，使用Thread.Interrupt强制打断，并使用信号量(TaskCompletionSource)等方式暴露一个可等待的异步任务：
+using(var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(2000)))
+{
+    try
+    {
+        var task = new CancelableThreadTask(LongRunningJob);
+        await task.RunAsync(cts.Token);
+    }
+    catch (TaskCanceledException)
+    {
+        Console.WriteLine("Task was canceled");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Task failed:{ex}");
+    }
+    Console.WriteLine("Done"); //发现：2秒后打印Task was canceled和Done；继续等待并没有打印Long running job completed!，
+                               //说明LongRunningJob的确被取消了。这是由于当cts被cancel时，_thread.Interrupt()被触发，运行委托的线程被
+                               //杀死，因此委托本身也就不复存在，所以任务可以被正确取消。
+    //Console.ReadKey();
+}
 #endregion
+
+
 class Foo
 {
     /// <summary>
@@ -1282,4 +1324,74 @@ class ValueTaskDemo
         return v;
     }
 }
+
+class CancelableThreadTask 
+{
+    private Thread? _thread;
+    private readonly Action _action;
+    private TaskCompletionSource? _tcs;
+    private int _isRunning = 0; //0:未运行；1:正在运行
+    private readonly Action<Exception>? _onError; //回调，用来在委托抛出异常时进行资源回收等操作。
+    private readonly Action? _onCompletedSuccessfully; //回调，用来在委托被成功执行后调用。
+    private readonly Action? _onCompleted; //回调，用来在委托被完成后调用，无论委托调用成功还是失败。
+
+    public CancelableThreadTask(Action action, Action<Exception>? onError = null, Action? onCompletedSuccessfully = null,
+                                Action? onCompleted = null)
+    {
+        ArgumentNullException.ThrowIfNull(action); //如果action为空则抛异常。
+        _action = action;
+        _onError = onError;
+        _onCompletedSuccessfully = onCompletedSuccessfully;
+        _onCompleted = onCompleted;
+    }
+
+    public Task RunAsync(CancellationToken token)
+    {
+        //使用_isRunning和0进行比较：
+        //1._isRunning=0时，将_isRunning的值变为1，表示正在运行；CompareExchange的返回值是_isRunning的初始值0，不进入if语句；
+        //2._isRunning=1时，_isRunning的值保持不变；CompareExchange的返回值是_isRunning的初始值1，进入if语句。
+        //使用Interlocked.CompareExchange而不使用bool值去判断是否在运行的好处是：_isRunning可能会在多线程中被访问和修改，Interlocked的
+        //原子性能保证其线程安全。
+        if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1)
+            throw new InvalidOperationException("A task is already running!");
+        _tcs = new TaskCompletionSource(); //给外部暴露_tcs，用来监测(反应)_thread内部任务的状态。
+        //开辟新的线程去执行委托，并且将_tcs暴露给外部去反应线程内委托的执行状态。
+        _thread = new Thread(() =>
+        {
+            try
+            {
+                _action(); //执行委托。
+                _tcs.SetResult(); //将tcs设为RunToCompletion。
+                _onCompletedSuccessfully?.Invoke();
+            }
+            catch (ThreadInterruptedException ex)
+            {
+                _tcs.TrySetCanceled(); //当捕获了ThreadInterruptedException，说明外部触发了CancellationToken，token.Register中的回调被执行，
+                                       //这时给_tcs也设置相应的Cancel状态。注意这里会抛一个TaskCanceledException。
+                _onError?.Invoke(ex);
+            }
+            catch (Exception ex) //其他异常在此捕获，例如action内部的异常。
+            {
+                _tcs.SetException(ex);
+                _onError?.Invoke(ex);
+            }
+            finally 
+            {
+                Interlocked.Exchange(ref _isRunning, 0);
+                _onCompleted?.Invoke(); //无论执行成功或失败，都去调用该委托。
+            }
+        });
+
+        //注册当CancellationToken被触发时的回调：使用interrupt打断thread。
+        token.Register(() => 
+        {
+            if(Interlocked.CompareExchange(ref _isRunning, 0, 1) == 1)
+                _thread.Interrupt();
+        });
+
+        _thread.Start();
+        return _tcs.Task; //返回tcs.task，以便外部监测内部委托的状态。
+    }
+}
+
 #endregion
