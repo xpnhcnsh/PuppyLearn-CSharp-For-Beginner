@@ -8,7 +8,11 @@ using Nito.AsyncEx;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Channels;
+using ThirdPartyClassLib;
 
 int count = 0;
 //var thread1 = new Thread(ThreadMethod);
@@ -51,9 +55,9 @@ int count = 0;
 //        Interlocked.Increment(ref count);
 //}
 
-////锁:任何线程执行count++前会拿到LockObj对象，当持有此对象时，lock (LockObj)作用域内的所有语句都是原子的，即里面的对象不会被其他线程操作，
-////直到当前线程离开lock (LockObj)的作用域。
-////锁的作用域内可以执行更复杂的操作。
+//锁:任何线程执行count++前会拿到LockObj对象，当持有此对象时，lock (LockObj)作用域内的所有语句都是原子的，即里面的对象不会被其他线程操作，
+//直到当前线程离开lock (LockObj)的作用域。
+//锁的作用域内可以执行更复杂的操作。
 //void LockIncrement()
 //{
 //    for (int i = 0; i < 10000; i++)
@@ -103,7 +107,7 @@ int count = 0;
 #region 结束一个线程：thread.Join()和thread.Interrupt()；不要使用thread.Abort()，可能导致未知错误。
 //thread.Join()等待子线程的停止，但会阻塞主线程，直到子线程结束，主线程才会恢复。即thread.Join()等待子线程“自然死亡”。
 //子线程可接受object?类型的输入参数start。
-//var subThread = new Thread(start: (object? input) =>
+//var subThread = new Thread((object? input) =>
 //{
 //    for (int i = 0; i < 10; i++)
 //    {
@@ -116,7 +120,7 @@ int count = 0;
 //subThread.Start(123); //开启子线程。
 //Console.WriteLine("Main thread: waiting for subthread to finish...");
 //subThread.Join(); //主线程运行到这里，主线程会被阻塞住，等待子线程完全执行完毕，否则不会打印最后的Done。
-//Console.WriteLine("Done");
+//Console.WriteLine("Main thread: Subthread Done!");
 
 //但有时候我们不知道一个子线程会运行多长时间才会结束，可能希望能够手动杀死子线程，这时可以使用thread.Interrupt()。
 //var subThread2 = new Thread(start: (object? input) =>
@@ -133,18 +137,19 @@ int count = 0;
 //    {
 //        Console.WriteLine("Subthread has been interrupted!");
 //    }
-//    finally 
+//    finally
 //    {
 //        Console.WriteLine("Subthread is about to finish.");
 //    }
-//}){ IsBackground = true, Priority = ThreadPriority.Normal }; 
+//})
+//{ IsBackground = true, Priority = ThreadPriority.Normal };
 
 //subThread2.Start(123); //开启子线程。
 //Console.WriteLine("Main thread: waiting for subthread to finish...");
 //Thread.Sleep(500);
 //subThread2.Interrupt(); //向子线程发出interrupt信号，同时继续向下执行，不会阻塞。
-////subThread2.Join(); //如果需要保证Done一定在子线程结束之后才打印，这里可以使用Join去等待子线程完全结束。如果不用Join，则无法保证Done是在子线程结束
-//                     //前打印还是在子线程结束之后打印。
+//subThread2.Join(); //如果需要保证Done一定在子线程结束之后才打印，这里可以使用Join去等待子线程完全结束。如果不用Join，则无法保证Done是在子线程结束
+//                        //前打印还是在子线程结束之后打印。
 //Console.WriteLine("Done");
 
 //小技巧：
@@ -157,7 +162,7 @@ int count = 0;
 //        while (true)
 //        {
 //            //如果没有Thread.Sleep(0)，即使主线程发出了中断异常，子线程也没有资源去catch这个异常，因为子线程的时间片已经被while循环占满了。
-//            //Thread.Sleep(0); 
+//            Thread.Sleep(0); 
 //        }
 //    }
 //    catch (ThreadInterruptedException)
@@ -168,12 +173,13 @@ int count = 0;
 //    {
 //        Console.WriteLine("Subthread is about to finish.");
 //    }
-//}){ IsBackground = true, Priority = ThreadPriority.Normal }; 
+//})
+//{ IsBackground = true, Priority = ThreadPriority.Normal };
 
 //subThread3.Start(123); //开启子线程。
 //Console.WriteLine("Main thread: waiting for subthread to finish...");
 //Thread.Sleep(500);
-//subThread3.Interrupt(); 
+//subThread3.Interrupt();
 //subThread3.Join(); //如果子线程无法正确响应subThread3.Interrupt()，那么主线程会一直阻塞在这里无法结束。
 //Console.WriteLine("Done");
 #endregion
@@ -200,21 +206,21 @@ int count = 0;
 
 //void ReadNumber()
 //{
-//	try
-//	{
-//		while (true)
-//		{
-//			if(queue.TryDequeue(out int temp))
-//			{
+//    try
+//    {
+//        while (true)
+//        {
+//            if (queue.TryDequeue(out int temp))
+//            {
 //                Console.WriteLine(temp);
-//			}
-//			Thread.Sleep(100);
-//		}
-//	}
-//	catch (ThreadInterruptedException)
-//	{
+//            }
+//            Thread.Sleep(100);
+//        }
+//    }
+//    catch (ThreadInterruptedException)
+//    {
 //        Console.WriteLine("Consumer interrupted!");
-//	}
+//    }
 //}
 #endregion
 #endregion
@@ -955,7 +961,7 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 //Console.WriteLine($"Elapsed:{elapsed}");
 //Console.WriteLine("Done");
 //Console.ReadKey(); //发现：1秒后“Done”被打印出来，3秒后"Long running job completed!"被打印出来
-                   //这表示，task2并没有因为task1结束而结束，WhenAny并没有取消LongRunningJob，LongRunningJob依然在后台执行。
+//这表示，task2并没有因为task1结束而结束，WhenAny并没有取消LongRunningJob，LongRunningJob依然在后台执行。
 
 //假设这是一个无法修改的耗时方法，比如从其他库中调用的函数。
 static void LongRunningJob()
@@ -965,28 +971,129 @@ static void LongRunningJob()
 }
 
 //方案2.使用Thread来运行LongRunningJob，使用Thread.Interrupt强制打断，并使用信号量(TaskCompletionSource)等方式暴露一个可等待的异步任务：
-using(var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(2000)))
-{
-    try
-    {
-        var task = new CancelableThreadTask(LongRunningJob);
-        await task.RunAsync(cts.Token);
-    }
-    catch (TaskCanceledException)
-    {
-        Console.WriteLine("Task was canceled");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Task failed:{ex}");
-    }
-    Console.WriteLine("Done"); //发现：2秒后打印Task was canceled和Done；继续等待并没有打印Long running job completed!，
-                               //说明LongRunningJob的确被取消了。这是由于当cts被cancel时，_thread.Interrupt()被触发，运行委托的线程被
-                               //杀死，因此委托本身也就不复存在，所以任务可以被正确取消。
-    //Console.ReadKey();
-}
+//using(var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(2000)))
+//{
+//    try
+//    {
+//        var task = new CancelableThreadTask(LongRunningJob);
+//        await task.RunAsync(cts.Token);
+//    }
+//    catch (TaskCanceledException)
+//    {
+//        Console.WriteLine("Task was canceled");
+//    }
+//    catch (Exception ex)
+//    {
+//        Console.WriteLine($"Task failed:{ex}");
+//    }
+//    Console.WriteLine("Done"); //发现：2秒后打印Task was canceled和Done；继续等待并没有打印Long running job completed!，
+//                               //说明LongRunningJob的确被取消了。这是由于当cts被cancel时，_thread.Interrupt()被触发，运行委托的线程被
+//                               //杀死，因此委托本身也就不复存在，所以任务可以被正确取消。
+//    //Console.ReadKey();
+//}
+
+//CancelableThreadTask的局限
+//见Interrupting threads Notes from https://learn.microsoft.com/en-us/dotnet/standard/threading/pausing-and-resuming-threads
+//If the target thread is not blocked when Thread.Interrupt is called, the thread is not interrupted until it blocks.
+//If the thread never blocks, it could complete without ever being interrupted.
+//使用Thread.Interrupt打断线程时，如果目标线程里没有任何阻塞，那么Thread.Interrupt将不会生效，而是会继续执行。
+//也就是说，如果目标方法里没有任何阻塞线程的操作，例如thread.sleep, thread.join等操作，那么Thread.Interrupt并不会生效。
+
+//调用ThirdPartyUtils.CancelableSyncMethod()
+//在CancelableSyncMethod中，for循环里是thread.sleep，因此这个方法可以被interrupt，CancelableThreadTask可以正常生效。
+//using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+//var threadTask = new CancelableThreadTask(() => ThirdPartyUtils.CancelableSyncMethod());
+//using (new SimpleTimer("Task started!"))
+//{
+//    try
+//    {
+//        await threadTask.RunAsync(cts.Token); //3s后ThirdPartyUtils.CancelableSyncMethod()被成功cancel
+//    }
+//    catch (OperationCanceledException)
+//    {
+//        Console.WriteLine("Task cancelled!");
+//    }
+//}
+//Console.ReadKey();
+
+//调用ThirdPartyUtils.UncancelableSyncMethod()
+//在UncancelableSyncMethod中并没有任何线程阻塞的操作，导致thread.interrupt无法生效，因此CancelableThreadTask也无法正常生效。
+//using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+//var threadTask = new CancelableThreadTask(() => ThirdPartyUtils.UncancelableSyncMethod());
+//using (new SimpleTimer("Task started!"))
+//{
+//    try
+//    {
+//        await threadTask.RunAsync(cts.Token); //6s后ThirdPartyUtils.UncancelableSyncMethod()执行完毕，未能被成功cancel
+//    }
+//    catch (OperationCanceledException)
+//    {
+//        Console.WriteLine("Task cancelled!");
+//    }
+//}
+//Console.ReadKey();
+
+//后面探讨针对类似UncancelableSyncMethod这样的第三方库，如何打断其运行：
+//从 https://learn.microsoft.com/en-us/dotnet/standard/threading/destroying-threads 我们得知，官方推荐的方法是：
+//对于.net framework使用thread.abort，但对于.net5+的版本，在独立的进程中调用第三方方法，然后使用Process.kill杀死进程。
+//The Thread.Abort method is not supported in .NET 5 (including .NET Core) and later versions.
+//If you need to terminate the execution of third-party code forcibly in .NET 5+, run it in the separate process and use Process.Kill.
+//我们使用process运行第三方库中的方法：
+//using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+//注意：.\ThirdPartyMethodWrapper.exe的路径必须提前build才会生成
+//var processTask = new CancelableProcessTask(@".\ThirdPartyMethodWrapper.exe", "uncancelable");
+//using (new SimpleTimer("Task started!"))
+//{
+//    try
+//    {
+//        await processTask.RunAsync(cts.Token); //这次发现该方法在3秒后被正确的cancel掉了
+//        Console.WriteLine("Task ended successfully!");
+//    }
+//    catch
+//    {
+//        Console.WriteLine("Task cancelled or failed!");
+//    }
+//}
+//Console.ReadLine();
 #endregion
 
+#region 使用Barrier实现多个异步任务同时完成
+//场景：2个任务同时进行，且对于每个任务来说，都有分为3个阶段，任意一个任务每完成一个阶段，都需要等待另一个任务也完成该阶段后，再同时开始下一个阶段，直到
+//最后一个阶段同步完成。
+var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+Barrier barrier = new Barrier(2, postPhaseAction =>
+{
+    Console.WriteLine($"阶段{postPhaseAction.CurrentPhaseNumber+1}完成 \n");
+});
+
+ var task1 = Task.Run(() => 
+{
+    for(int i=0; i < 3; i++)
+    {
+        Console.WriteLine($"任务1正在进行阶段{i + 1}...");
+        Thread.Sleep(2000);
+        Console.WriteLine($"任务1完成阶段{i + 1}...");
+        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
+    }
+});
+
+var task2 = Task.Run(() =>
+{
+    for (int i = 0; i < 3; i++)
+    {
+        Console.WriteLine($"任务2正在进行阶段{i + 1}...");
+        Thread.Sleep(1000);
+        Console.WriteLine($"任务2完成阶段{i + 1}...");
+        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
+    }
+});
+
+var allTasks = Task.WhenAll([task1, task2]);
+await allTasks;
+if (allTasks.IsCompleted )
+    Console.WriteLine("All tasks completed!");
+
+#endregion
 
 class Foo
 {
@@ -1325,10 +1432,10 @@ class ValueTaskDemo
     }
 }
 
-class CancelableThreadTask 
+class CancelableThreadTask
 {
     private Thread? _thread;
-    private readonly Action _action;
+    private readonly Action _action; //待执行的任务
     private TaskCompletionSource? _tcs;
     private int _isRunning = 0; //0:未运行；1:正在运行
     private readonly Action<Exception>? _onError; //回调，用来在委托抛出异常时进行资源回收等操作。
@@ -1366,8 +1473,8 @@ class CancelableThreadTask
             }
             catch (ThreadInterruptedException ex)
             {
-                _tcs.TrySetCanceled(); //当捕获了ThreadInterruptedException，说明外部触发了CancellationToken，token.Register中的回调被执行，
-                                       //这时给_tcs也设置相应的Cancel状态。注意这里会抛一个TaskCanceledException。
+                _tcs.TrySetCanceled(token); //当捕获了ThreadInterruptedException，说明外部触发了CancellationToken，token.Register中的回调被执行，
+                                            //这时给_tcs也设置相应的Cancel状态。注意这里会抛一个TaskCanceledException。
                 _onError?.Invoke(ex);
             }
             catch (Exception ex) //其他异常在此捕获，例如action内部的异常。
@@ -1375,7 +1482,7 @@ class CancelableThreadTask
                 _tcs.SetException(ex);
                 _onError?.Invoke(ex);
             }
-            finally 
+            finally
             {
                 Interlocked.Exchange(ref _isRunning, 0);
                 _onCompleted?.Invoke(); //无论执行成功或失败，都去调用该委托。
@@ -1383,10 +1490,14 @@ class CancelableThreadTask
         });
 
         //注册当CancellationToken被触发时的回调：使用interrupt打断thread。
-        token.Register(() => 
+        token.Register(() =>
         {
-            if(Interlocked.CompareExchange(ref _isRunning, 0, 1) == 1)
+            if (Interlocked.CompareExchange(ref _isRunning, 0, 1) == 1)
+            {
                 _thread.Interrupt();
+                _thread.Join(); //在发出Interrupt信号后，还需要阻塞以确保该线程确实被杀死，否则有可能发生线程实际并未被杀死就触发了_tcs.TrySetCanceled(token)
+            }
+
         });
 
         _thread.Start();
@@ -1394,4 +1505,67 @@ class CancelableThreadTask
     }
 }
 
+class CancelableProcessTask
+{
+    private Process _process;
+    private TaskCompletionSource? _tcs;
+    private int _isRunning = 0;
+
+    /// <summary>
+    /// 用来新建进程以运行一个程序
+    /// </summary>
+    /// <param name="filename">程序路径</param>
+    /// <param name="arguments">开启进程时的入参，
+    /// 入参为cancelable时调用<seealso cref="ThirdPartyUtils.CancelableSyncMethod"> ThirdPartyUtils.CancelableSyncMethod()</seealso>；
+    /// 入参为uncancelable时调用<seealso cref="ThirdPartyUtils.UncancelableSyncMethod"> ThirdPartyUtils.UncancelableSyncMethod()</seealso>
+    /// 见<seealso cref="ThirdPartyMethodWrapper.Program.Main(string[])">ThirdPartyMethodWrapper</seealso>
+    /// </param>
+    public CancelableProcessTask(string filename, string arguments)
+    {
+        _process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = filename,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            }
+        };
+    }
+
+    public Task RunAsync(CancellationToken token)
+    {
+        if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1)
+            throw new InvalidOperationException("A task is already running!");
+
+        _tcs = new TaskCompletionSource();
+
+        token.Register(() =>
+        {
+            if (Interlocked.CompareExchange(ref _isRunning, 0, 1) == 1)
+            {
+                _process.Kill(); //使用process.kill()杀死进程
+            }
+        });
+
+        _process.EnableRaisingEvents = true; //必须设置为true，process的终止才会触发Exited事件
+        _process.Exited += (sender, e) => //给process的Exited事件添加一个回调，在回调里设置tcs的状态供外部追踪
+        {
+            if (_process.ExitCode == 0) //程序正常退出
+                _tcs.SetResult();
+            else
+            {
+                if (token.IsCancellationRequested) //如果token被cancel就设置task为canceled
+                    _tcs.SetCanceled(token);
+                else
+                    _tcs.SetException(new Exception($"Process exited with code {_process.ExitCode}"));
+            }
+        };
+        _process.Start();
+        return _tcs.Task;
+    }
+}
 #endregion

@@ -8,13 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MyUtilities\MyUtilities.csproj" />
     <ProjectReference Include="..\ThirdPartyClassLib\ThirdPartyClassLib.csproj" />
-    <ProjectReference Include="..\ThirdPartyMethodWrapper\ThirdPartyMethodWrapper.csproj" />
   </ItemGroup>
 
 </Project>

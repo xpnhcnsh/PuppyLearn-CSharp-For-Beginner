@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics;
 using static MyUtilities.MyDelegates;
 
 namespace MyUtilities
@@ -60,6 +61,28 @@ namespace MyUtilities
         public override string ToString()
         {
             return string.Join("\n", Roster);
+        }
+    }
+
+    /// <summary>
+    /// 使用using语句包装SimpleTimer，即可打印出作用域内执行的时间
+    /// </summary>
+    public class SimpleTimer : IDisposable
+    {
+        private readonly long _start;
+        private readonly string _stopMsg;
+
+        public SimpleTimer(string? startMsg = "", string stopMsg = "Elapsed time: {0:F3}s")
+        {
+            _stopMsg = stopMsg;
+            if(!string.IsNullOrEmpty(startMsg))
+                Console.WriteLine(startMsg);
+            _start = Stopwatch.GetTimestamp();
+        }
+
+        public void Dispose()
+        {
+            Console.WriteLine(_stopMsg, Stopwatch.GetElapsedTime(_start).TotalSeconds);
         }
     }
 }
