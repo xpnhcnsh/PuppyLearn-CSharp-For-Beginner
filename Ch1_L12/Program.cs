@@ -99,7 +99,7 @@ int count = 0;
 
 //int HeavyJob(int input)
 //{
-//    Thread.Sleep(100);
+//    Thread.Sleep(100); //阻塞方法
 //    return input * input;
 //}
 #endregion
@@ -246,15 +246,15 @@ int count = 0;
 #endregion
 
 #region Task<T>: C#中通常使用Task对异步方法进行包装。开始任务，等待任务，查看任务状态；T表示任务返回值为T类型，非泛型版本表示无返回值
-//var task = new Task<string>(() =>
+//Task<string> task = new Task<string>(() =>
 //{
-//    Task.Delay(100);
+//    Task.Delay(100); //非阻塞的方法
 //    return "done";
 //});
 
 //Console.WriteLine(task.Status);
 //task.Start(); //Start()方法不会阻塞主线程，后续打印task.Status的方法会在task运行的同步执行。
-//////task.Wait(); //Wait()方法会阻塞主线程，直到task结束或触发异常，才继续执行Wait()后的代码。
+//task.Wait(); //Wait()方法会阻塞主线程，直到task结束或触发异常，才继续执行Wait()后的代码。
 //Console.WriteLine(task.Status);
 //Thread.Sleep(1000);
 //Console.WriteLine(task.Status);
@@ -273,10 +273,10 @@ int count = 0;
 //    return "done";
 //}).ConfigureAwait(false);
 //Console.WriteLine($"[{Environment.CurrentManagedThreadId}]: 主线程"); //默认情况下会回到原线程。可以使用ConfigureAwait(false)，使其不回到原线程
-//但在Console中由于不存在同步上下文的概念，因此此配置不起作用。
-//在Console中默认会使用当前线程继续执行后续代码。
+////但在Console中由于不存在同步上下文的概念，因此此配置不起作用。
+////在Console中默认会使用当前线程继续执行后续代码。
 //Console.WriteLine(task2Res); //如果不写await，那么这里无法拿到task2Res正确的结果，因为没等任务执行完毕，代码就已经执行到这里了。这被称为Fire & Forget，一发既忘。
-//                             //最好不要这样做。
+////                           //最好不要这样做。
 #endregion
 
 #region async void & async Task: async Task返回一个Task对象，对异步方法进行包装，使外部可以捕捉到其异常，或感知到其执行状态，使异步方法更安全
@@ -315,7 +315,7 @@ int count = 0;
 //{
 //    var task = Task.Run(SearchAysnc);
 //    //task.Wait(); //在for循环中，每个task都会将主线程阻塞在此，因此实际上这种调用是同步调用方式。
-//    Console.WriteLine(task.Result); //task.Result本身也会阻塞主线程，直到子线程结束拿到Result后才返回给主线程打印，task.Result和Wait()功能相同。
+//    //Console.WriteLine(task.Result); //task.Result本身也会阻塞主线程，直到子线程结束拿到Result后才返回给主线程打印，task.Result和Wait()功能相同。
 
 //    //新的写法使用await task直接拿到真实的返回值string，而不是task.Wait()；同样阻塞主线程。
 //    var res = await task;
@@ -332,11 +332,11 @@ int count = 0;
 //}
 //watch.Restart();
 ////Task.WaitAll(tasks.ToArray()); //阻塞，但并发。
-//var resArray = await Task.WhenAll(tasks); //或
-////Task.WhenAll(tasks).Wait(); //或
+////var resArray = await Task.WhenAll(tasks); //或
+//Task.WhenAll(tasks).Wait(); //或
 //watch.Stop();
-//foreach (var res in resArray)
-//    Console.WriteLine(res);
+////foreach (var res in resArray)
+////    Console.WriteLine(res);
 
 //Console.WriteLine($"{watch.ElapsedMilliseconds}ms in total.");
 //foreach (var task in tasks)
@@ -363,7 +363,7 @@ static async Task<string> SearchAysnc()
                                       //返回UI线程。而Console程序不存在同步上下文，所以ConfigAwait(false)在console中不生效。在UI程序或Asp.Net中，如果在同步方法中阻塞异步方法，可能会
                                       //导致死锁：例如在异步任务中调用UI资源去计算一个返回值，而UI线程中在wait()该异步任务（或使用.Result等待其返回值），此时UI线程被阻塞，无法给异步任务
                                       //提供计算所需的资源，就会产生死锁）。而使用await执行耗时操作，可以确保await的任务使用新的线程执行，放开UI线程去
-                                      //响应其他操作。（对于ASP.Net，则是放开web服务，相应其他用户的请求，而不会因为一个用户的好事请求阻塞整个web服务，从而提高并发量。）
+                                      //响应其他操作。（对于ASP.Net，则是放开web服务，相应其他用户的请求，而不会因为一个用户的耗时请求阻塞整个web服务，从而提高并发量。）
     watch.Stop();
     return $"[{Environment.CurrentManagedThreadId}]: {watch.ElapsedMilliseconds}"; //语法糖：这里只需返回string，无需返回Task<string>。
 }
@@ -375,27 +375,27 @@ static async Task<string> SearchAysnc()
 //使用cts.Cancel()主动结束任务。
 //using (CancellationTokenSource cts = new CancellationTokenSource())
 //{
-//var sw = Stopwatch.StartNew();
-//var cancelTask = Task.Run(async () =>
-//{
-//    await Task.Delay(3000);
-//    cts.Cancel(); //触发cts的Cancel行为。
-//});
+//    var sw = Stopwatch.StartNew();
+//    var cancelTask = Task.Run(async () =>
+//    {
+//        await Task.Delay(3000);
+//        cts.Cancel(); //触发cts的Cancel行为。
+//    });
 
-//try
-//{
-//    //下面的代码，运行两个任务，第一个任务在10秒后结束，传入了cts.Token；第二个任务会在3秒后触发cts.Cancel()，这个行为会被第一个任务捕捉到，因此第一个任务也会在3秒后结束。
-//    //Task.WhenAll()会在全部任务结束后返回，因此该任务总计需要3秒左右，而非10秒。
-//    //cts.Cancel()会触发TaskCanceledException，因此可以catch到该异常。
-//    //常用的场景是，多个异步任务，使用不同方法进行计算，其中一个任务完成后其他任务即可停止无需继续下去，这时给每个任务都传入cts.Token，并且在结束后都执行cts.Cancel()，
-//    //这样任意一个任务结束后，都会触发token的Cancel行为，其他任务都会被停止，无需浪费资源继续计算。
-//    await Task.WhenAll(Task.Delay(10000, cts.Token), cancelTask);
-//}
-//catch (TaskCanceledException ex)
-//{
-//    Console.WriteLine(ex);
-//}
-//Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms.");
+//    try
+//    {
+//        //下面的代码，运行两个任务，第一个任务在10秒后结束，传入了cts.Token；第二个任务会在3秒后触发cts.Cancel()，这个行为会被第一个任务捕捉到，因此第一个任务也会在3秒后结束。
+//        //Task.WhenAll()会在全部任务结束后返回，因此该任务总计需要3秒左右，而非10秒。
+//        //cts.Cancel()会触发TaskCanceledException，因此可以catch到该异常。
+//        //常用的场景是，多个异步任务，使用不同方法进行计算，其中一个任务完成后其他任务即可停止无需继续下去，这时给每个任务都传入cts.Token，并且在结束后都执行cts.Cancel()，
+//        //这样任意一个任务结束后，都会触发token的Cancel行为，其他任务都会被停止，无需浪费资源继续计算。
+//        await Task.WhenAll(Task.Delay(10000, cts.Token), cancelTask);
+//    }
+//    catch (TaskCanceledException ex)
+//    {
+//        Console.WriteLine(ex);
+//    }
+//    Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms.");
 //}
 
 //使用Delay参数，超时后自动取消任务。
@@ -416,7 +416,7 @@ static async Task<string> SearchAysnc()
 //使用CancelAfter()方法定义超时时间。
 //using (var cts = new CancellationTokenSource())
 //{
-//    cts.CancelAfter(3000);
+//    cts.CancelAfter(TimeSpan.FromSeconds(3));
 //    var sw = Stopwatch.StartNew();
 //    try
 //    {
@@ -476,11 +476,18 @@ static async Task<string> SearchAysnc()
 //在自己写的方法中，就需要使用cancellationToken.IsCancellationRequested手动去判断token的状态。
 
 //这里传入了一个超时3秒的cancellationToken。
-//using (var cts = new CancellationTokenSource(3000))
-//{
-//    Foo foo = new Foo();
-//    await foo.FooAsync(cts.Token);
-//}
+using (var cts = new CancellationTokenSource(3000))
+{
+    try
+    {
+        Foo foo = new Foo();
+        await foo.FooAsync(cts.Token);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.Message);
+    }
+}
 #endregion
 
 #region 任务取消的对策
@@ -1060,38 +1067,38 @@ static void LongRunningJob()
 #region 使用Barrier实现多个异步任务同时完成
 //场景：2个任务同时进行，且对于每个任务来说，都有分为3个阶段，任意一个任务每完成一个阶段，都需要等待另一个任务也完成该阶段后，再同时开始下一个阶段，直到
 //最后一个阶段同步完成。
-var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-Barrier barrier = new Barrier(2, postPhaseAction =>
-{
-    Console.WriteLine($"阶段{postPhaseAction.CurrentPhaseNumber+1}完成 \n");
-});
+//var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+//Barrier barrier = new Barrier(2, postPhaseAction =>
+//{
+//    Console.WriteLine($"阶段{postPhaseAction.CurrentPhaseNumber+1}完成 \n");
+//});
 
- var task1 = Task.Run(() => 
-{
-    for(int i=0; i < 3; i++)
-    {
-        Console.WriteLine($"任务1正在进行阶段{i + 1}...");
-        Thread.Sleep(2000);
-        Console.WriteLine($"任务1完成阶段{i + 1}...");
-        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
-    }
-});
+// var task1 = Task.Run(() => 
+//{
+//    for(int i=0; i < 3; i++)
+//    {
+//        Console.WriteLine($"任务1正在进行阶段{i + 1}...");
+//        Thread.Sleep(2000);
+//        Console.WriteLine($"任务1完成阶段{i + 1}...");
+//        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
+//    }
+//});
 
-var task2 = Task.Run(() =>
-{
-    for (int i = 0; i < 3; i++)
-    {
-        Console.WriteLine($"任务2正在进行阶段{i + 1}...");
-        Thread.Sleep(1000);
-        Console.WriteLine($"任务2完成阶段{i + 1}...");
-        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
-    }
-});
+//var task2 = Task.Run(() =>
+//{
+//    for (int i = 0; i < 3; i++)
+//    {
+//        Console.WriteLine($"任务2正在进行阶段{i + 1}...");
+//        Thread.Sleep(1000);
+//        Console.WriteLine($"任务2完成阶段{i + 1}...");
+//        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
+//    }
+//});
 
-var allTasks = Task.WhenAll([task1, task2]);
-await allTasks;
-if (allTasks.IsCompleted )
-    Console.WriteLine("All tasks completed!");
+//var allTasks = Task.WhenAll([task1, task2]);
+//await allTasks;
+//if (allTasks.IsCompleted )
+//    Console.WriteLine("All tasks completed!");
 
 #endregion
 
@@ -1104,21 +1111,31 @@ class Foo
     /// <returns></returns>
     public Task FooAsync(CancellationToken cancellationToken)
     {
+
+
         return Task.Run(() =>
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                HeayJob();
-            }
+            //while (!cancellationToken.IsCancellationRequested)
+            //{
+            //    HeayJob();
+            //}
 
             //或用if判断，如果触发了cancel，就抛出异常。
-            //while (true)
-            //{
-            //    if (cancellationToken.IsCancellationRequested)
-            //        cancellationToken.ThrowIfCancellationRequested();
-            //    HeayJob();
-            //}      
+            while (true)
+            {
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    HeayJob();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    throw;
+                }
+            }
         });
+
     }
 
     /// <summary>
