@@ -1,4 +1,5 @@
-﻿//Quiz1:
+﻿Console.WriteLine();
+//Quiz1:
 //虚数加减乘除
 
 //Quiz2:
