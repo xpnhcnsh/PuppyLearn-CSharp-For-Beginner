@@ -476,18 +476,18 @@ static async Task<string> SearchAysnc()
 //在自己写的方法中，就需要使用cancellationToken.IsCancellationRequested手动去判断token的状态。
 
 //这里传入了一个超时3秒的cancellationToken。
-using (var cts = new CancellationTokenSource(3000))
-{
-    try
-    {
-        Foo foo = new Foo();
-        await foo.FooAsync(cts.Token);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine(ex.Message);
-    }
-}
+//using (var cts = new CancellationTokenSource(3000))
+//{
+//    try
+//    {
+//        Foo foo = new Foo();
+//        await foo.FooAsync(cts.Token);
+//    }
+//    catch (OperationCanceledException ex)
+//    {
+//        Console.WriteLine(ex.Message);
+//    }
+//}
 #endregion
 
 #region 任务取消的对策
@@ -501,23 +501,23 @@ using (var cts = new CancellationTokenSource(3000))
 //    int input = 1;
 //    if (input % 2 == 0)
 //        cts.Cancel();
-//    Task<int> res = foo2.FooAsync(input, cts.Token); //这里不要使用await，否则会等待FooAsync执行完毕，后续if代码才执行；且会返回int而非Task；
-//                                                     //且会抛出异常，但这里我们不希望使用try catch。
-//由于没有使用await，因此FooAsync会在后台执行，且代码会继续向下执行，如果这里需要FooAsync的结果，那么使用res.Result调取结果，注意，如果此时任务已经
-//结束，那么不会阻塞主线程，直接获取到结果；如果任务在调用res.Result时还没完成，那么会阻塞主线程直到获取到结果为止。
+//    Task<int> res = foo2.FooAsync(input, cts.Token);   //这里不要使用await，否则会等待FooAsync执行完毕，后续if代码才执行；且会返回int而非Task；
+//                                                       //且会抛出异常，但这里我们不希望使用try catch。
+//    //由于没有使用await，因此FooAsync会在后台执行，且代码会继续向下执行，如果这里需要FooAsync的结果，那么使用res.Result调取结果，注意，如果此时任务已经
+//    //结束，那么不会阻塞主线程，直接获取到结果；如果任务在调用res.Result时还没完成，那么会阻塞主线程直到获取到结果为止。
 //    if (res.Status == TaskStatus.Canceled)
-//        Console.WriteLine(res.Status);
+//        Console.WriteLine($"if: {res.Status}");
 //    else
-//        Console.WriteLine(res.Result);
+//        Console.WriteLine($"else: {res.Result}");
 //}
 #endregion
 
 #region Task.Run可以直接传入cancellationToken，传入后无需再进行IsCancellationRequested的预检测，会自动抛出异常。但后后续代码无法自动触发TaskCanceledException异常
 //在Task.Run中传入token的唯一作用就是替代任务一开始对IsCancellationRequested的预检测，一旦进入while循环，即使外部触发了cancel，那么Task也不会因此停止。
 //因此如果是需要长期监测token状态，依然需要在每次循环中检测IsCancellationRequested。
-//using (var cts = new CancellationTokenSource(2000))
+//using (var cts = new CancellationTokenSource(4000))
 //{
-//    cts.Cancel();
+//    //cts.Cancel();
 //    try
 //    {
 //        await Task.Run(() =>
@@ -526,6 +526,8 @@ using (var cts = new CancellationTokenSource(3000))
 //            //    return;
 //            while (true)
 //            {
+//                //if(cts.IsCancellationRequested)
+//                //    return;
 //                Thread.Sleep(1000);
 //                Console.WriteLine("Foo...");
 //            }
@@ -535,7 +537,6 @@ using (var cts = new CancellationTokenSource(3000))
 //    {
 //        Console.WriteLine(ex);
 //    }
-
 //}
 #endregion
 
@@ -547,7 +548,7 @@ using (var cts = new CancellationTokenSource(3000))
 //    //注意：执行的顺序是，后注册的先被调用。
 //    try
 //    {
-//        await Task.Run(() => 
+//        await Task.Run(() =>
 //        {
 //            int progress = 0;
 //            while (true)
@@ -557,7 +558,7 @@ using (var cts = new CancellationTokenSource(3000))
 //                Console.WriteLine($"正在下载...{progress++}%");
 //                Thread.Sleep(1000);
 //            }
-//        }, cts.Token);
+//        });
 //    }
 //    catch (TaskCanceledException ex)
 //    {
@@ -584,7 +585,7 @@ using (var cts = new CancellationTokenSource(3000))
 //var cts = new CancellationTokenSource();
 //var fooTask = FooAsync(cts.Token);
 //var completedTask = await Task.WhenAny(fooTask, Task.Delay(2000));
-//if (completedTask !=fooTask)
+//if (completedTask != fooTask)
 //{
 //    cts.Cancel();
 //    await fooTask;
@@ -613,7 +614,7 @@ using (var cts = new CancellationTokenSource(3000))
 //使用WaitAsync()，默认接收一个timeout：.Net6以后可用。推荐使用。
 //try
 //{
-//    await fooTask.WaitAsync(TimeSpan.FromMilliseconds(2000));
+//    await fooTask.WaitAsync(TimeSpan.FromMilliseconds(2000)); 
 //    Console.WriteLine("Success!");
 //}
 //catch (TimeoutException)
@@ -702,7 +703,7 @@ async Task FooAsync(CancellationToken token)
 //            while (true)
 //            {
 //                //Take是一个阻塞方法。
-//                //注意：当queue中有数据，时，take会从queue里remove一个元素并返回；如果queue里没有可用元素，则会阻塞，直到有可用元素。
+//                //注意：当queue中有数据时，take会从queue里remove一个元素并返回；如果queue里没有可用元素，则会阻塞，直到有可用元素。
 //                var msg = queue.Take();
 //                Console.WriteLine($"{WorkerName} received {msg.Msg} from {msg.ThreadName}");
 //                Thread.Sleep(1000);
@@ -718,30 +719,31 @@ async Task FooAsync(CancellationToken token)
 //使用Channel以异步形式实现生产者消费者队列：
 //由于Take是一个阻塞方法，以上方案只能用在Thread多线程编程中，但异步编程要求是“不阻塞”。
 //option定义一些channel的属性：
-//var option = new BoundedChannelOptions(20) //消息队列最多20个待处理的消息。
-//{
-//    FullMode = BoundedChannelFullMode.Wait, //当队列已满，新的消息会等待，直到队列有空位。
-//    SingleWriter = true, //只有1个生产者
-//    SingleReader = false, //可以有多个消费者
-//    AllowSynchronousContinuations = false, //允许消费者以同步方式处理数据，通常设为false：一般当消费者的处理速度大于生产者时，生产出一个元素后，再使用信号量去
-//                                            //通知消费者开销较大，这时使用同步的方式调用消费者性能更高，但这种情况较少出现。
-//};
-////只能使用静态方法去生成Bounded或Unbounded channel。
-//var channel = Channel.CreateBounded<Message>(option);
-//var sender1 = SendMsgAsync(channel.Writer, "Sender1");
-//var sender2 = SendMsgAsync(channel.Writer, "Sender2");
-//var receiver1 = ReceiveMsgAsync(channel.Reader, "Receiver1");
-//var receiver2 = ReceiveMsgAsync(channel.Reader, "Receiver2");
+var option = new BoundedChannelOptions(20) //消息队列最多20个待处理的消息。
+{
+    FullMode = BoundedChannelFullMode.Wait, //当队列已满，新的消息会等待，直到队列有空位。
+    SingleWriter = false, //只有1个生产者
+    SingleReader = false, //可以有多个消费者
+    AllowSynchronousContinuations = false, //允许消费者以同步方式处理数据，通常设为false：一般当消费者的处理速度大于生产者时，生产出一个元素后，再使用信号量去
+                                           //通知消费者开销较大，这时使用同步的方式调用消费者性能更高，但这种情况较少出现。
+};
+//只能使用静态方法去生成Bounded或Unbounded channel。
+var channel = Channel.CreateBounded<Message>(option);
+var sender1 = SendMsgAsync(channel.Writer, "Sender1");
+var sender2 = SendMsgAsync(channel.Writer, "Sender2");
+var receiver1 = ReceiveMsgAsync(channel.Reader, "Receiver1");
+var receiver2 = ReceiveMsgAsync(channel.Reader, "Receiver2");
 
-//await Task.WhenAll(sender1, sender2);
-//channel.Writer.Complete(); //当所有senders都执行完毕，writer发出信号表示已经不会有数据进入channel。
-//                           //Reader在消费完毕后触发ChannelClosedException，而不是writer.complete()时就抛出异常。
-//await Task.WhenAll(receiver1, receiver2);
+await Task.WhenAll(sender1, sender2); //等待所有生产者生产完毕
+channel.Writer.Complete(); //当所有senders都执行完毕，writer发出信号表示已经不会有数据进入channel。
+                           //Reader在消费完毕后触发ChannelClosedException，而不是writer.complete()时就抛出异常。
+await Task.WhenAll(receiver1, receiver2);
 
 async Task SendMsgAsync(ChannelWriter<Message> writer, string SenderName)
 {
     for (int i = 0; i <= 20; i++)
     {
+        await Task.Delay(100);
         await writer.WriteAsync(new Message(SenderName, i.ToString()));
         Console.WriteLine($"{SenderName} sent {i.ToString()}");
     }
@@ -754,8 +756,9 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
     //{
     //    //注意：这里是reader去判断complete，当writer set complete时，如果channel里仍然有消息，那么reader依然会继续处理消息，直到channel为空
     //    //reader才会自动set complete，然后触发ChannelClosedException。
-    //    while (!reader.Completion.IsCompleted) 
+    //    while (!reader.Completion.IsCompleted)
     //    {
+    //        await Task.Delay(500);
     //        var msg = await reader.ReadAsync(); //等同于多线程中BlockingCollection.Take方法，当Channel中有数据的时候就会异步地读取数据，区别是不会阻塞线程。
     //        Console.WriteLine($"{ReceiverName} received {msg.Msg} from {msg.ThreadName}");
     //    }
@@ -786,9 +789,10 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 
 //        //通过Task.GetAwaiter().GetResult()则能直接拿到InnerException。
 //        //var res = foo.FooAsync2(10, cts.Token).GetAwaiter().GetResult();
-//        //Console.WriteLine("123");
+
 //        //或直接await
 //        var res = await foo.FooAsync2(10, cts.Token);
+//        Console.WriteLine(res);
 //    }
 //    catch (Exception ex)
 //    {
@@ -1111,8 +1115,6 @@ class Foo
     /// <returns></returns>
     public Task FooAsync(CancellationToken cancellationToken)
     {
-
-
         return Task.Run(() =>
         {
             //while (!cancellationToken.IsCancellationRequested)
@@ -1123,19 +1125,10 @@ class Foo
             //或用if判断，如果触发了cancel，就抛出异常。
             while (true)
             {
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    HeayJob();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    throw;
-                }
+                cancellationToken.ThrowIfCancellationRequested(); //ctrl+alt+E搜OperationCanceledException，找到CLR里的这个异常，打勾后碰到该异常就会break，为了正常运行或debug，取消这个勾
+                HeayJob();
             }
         });
-
     }
 
     /// <summary>
@@ -1160,7 +1153,7 @@ class Foo2
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<int>(cancellationToken);
         else return Task.Run(() => HeayJob(input));
-        //注意：Task.Run接收一个Action或Func，但不能有显示的参数传入，例如Task.Run((int input) = >{})，只能是Task.Run((int input) = >{})
+        //注意：Task.Run接收一个Action或Func，但不能有显示的参数传入，例如Task.Run((int input) = >{})，只能是Task.Run(() = >{})
         //如果需要传参，封装一个函数然后将其返回给Lambda函数，例如这里的HeayJob(input)。
         //另一种传参的方法使用闭包技术：Lambda中的input，通过闭包从Task.Run外部传入。
         //else return Task.Run(() =>
@@ -1175,7 +1168,7 @@ class Foo2
     /// </summary>
     private int HeayJob(int input)
     {
-        Thread.Sleep(1000);
+        Thread.Sleep(10000);
         return input;
     }
 
@@ -1189,7 +1182,7 @@ class Foo2
     public async Task<int> FooAsync2(int input, CancellationToken token)
     {
         await Task.Delay(1000);
-        //throw new Exception("Error!");
+        throw new Exception("Error!");
         return input;
     }
 }
