@@ -88,3 +88,6 @@ public interface IUserRepository
     Task<bool> UpdateAsync(User user, CancellationToken cancellation);
 }
 #endregion
+
+#region Stryker：Mutation Test（变异测试）
+#endregion
