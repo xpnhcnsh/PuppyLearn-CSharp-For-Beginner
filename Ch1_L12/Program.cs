@@ -728,16 +728,16 @@ var option = new BoundedChannelOptions(20) //消息队列最多20个待处理的
                                            //通知消费者开销较大，这时使用同步的方式调用消费者性能更高，但这种情况较少出现。
 };
 //只能使用静态方法去生成Bounded或Unbounded channel。
-var channel = Channel.CreateBounded<Message>(option);
-var sender1 = SendMsgAsync(channel.Writer, "Sender1");
-var sender2 = SendMsgAsync(channel.Writer, "Sender2");
-var receiver1 = ReceiveMsgAsync(channel.Reader, "Receiver1");
-var receiver2 = ReceiveMsgAsync(channel.Reader, "Receiver2");
+//var channel = Channel.CreateBounded<Message>(option);
+//var sender1 = SendMsgAsync(channel.Writer, "Sender1");
+//var sender2 = SendMsgAsync(channel.Writer, "Sender2");
+//var receiver1 = ReceiveMsgAsync(channel.Reader, "Receiver1");
+//var receiver2 = ReceiveMsgAsync(channel.Reader, "Receiver2");
 
-await Task.WhenAll(sender1, sender2); //等待所有生产者生产完毕
-channel.Writer.Complete(); //当所有senders都执行完毕，writer发出信号表示已经不会有数据进入channel。
-                           //Reader在消费完毕后触发ChannelClosedException，而不是writer.complete()时就抛出异常。
-await Task.WhenAll(receiver1, receiver2);
+//await Task.WhenAll(sender1, sender2); //等待所有生产者生产完毕
+//channel.Writer.Complete(); //当所有senders都执行完毕，writer发出信号表示已经不会有数据进入channel。
+//                           //Reader在消费完毕后触发ChannelClosedException，而不是writer.complete()时就抛出异常。
+//await Task.WhenAll(receiver1, receiver2);
 
 async Task SendMsgAsync(ChannelWriter<Message> writer, string SenderName)
 {
@@ -815,7 +815,7 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 //    while (true)
 //    {
 //        Thread.Sleep(1);
-//        if (dataModel.IsDateLoaded)
+//        if (dataModel.IsDataLoaded)
 //            break;
 //    }
 //    var data = dataModel.Data;
@@ -834,7 +834,7 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 //    while (true)
 //    {
 //        Thread.Sleep(1);
-//        if (dataModel.IsDateLoaded)
+//        if (dataModel.IsDataLoaded)
 //            break;
 //    }
 //    var data = dataModel.Data;
@@ -886,7 +886,7 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 #endregion
 
 #region 如何在异步方法中实现同步机制：通过信号量
-//1. 使用Nito.AsyncEx中提供的AsyncAutoResetEvent
+////1. 使用Nito.AsyncEx中提供的AsyncAutoResetEvent
 //var signal = new AsyncAutoResetEvent(false);
 ////2秒后，signal.Set()发出信号。
 //var setter = Task.Run(() =>
@@ -896,13 +896,13 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 //    Console.WriteLine("Signal Set!");
 //});
 
-////当signal.WaitAsync()会在接收到set信号前阻塞，直到接收到set信号后，才执行后面的内容。
+//////signal.WaitAsync()会在接收到set信号前阻塞，直到接收到set信号后，才执行后面的内容。
 //var waiter = Task.Run(async () =>
 //{
 //    await signal.WaitAsync();
 //    Console.WriteLine("Signal Received!");
 //});
-////虽然WhenAll接受两个异步任务，但第二个任务实际上在第一个任务发出信号后才执行，因此实际上是同步执行。
+//////虽然WhenAll接受两个异步任务，但第二个任务实际上在第一个任务发出信号后才执行，因此实际上是同步执行。
 //await Task.WhenAll(setter, waiter);
 
 //2. 使用TaskCompletionSource(泛型表示需要在任务间传递的信息)，不仅可以实现异步任务的同步，也可以在不同异步任务之间传递信息。
@@ -920,7 +920,7 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 //    }
 //});
 
-////tcs.Task是tcs内部的一个属性，当tcs的Task属性被设置为RanToCompletion后，await tcs.Task就执行完毕了，接着可以执行后续代码，从而实现异步任务的同步机制。
+//////tcs.Task是tcs内部的一个属性，当tcs的Task属性被设置为RanToCompletion后，await tcs.Task就执行完毕了，接着可以执行后续代码，从而实现异步任务的同步机制。
 //var waiter = Task.Run(async () =>
 //{
 //    var setterInfo = await tcs.Task;
@@ -945,14 +945,14 @@ async Task ReceiveMsgAsync(ChannelReader<Message> reader, string ReceiverName)
 //ValueTaskDemo.ShowCache(); //这时发现key=2已经被添加到Cache中
 
 ////以上场景，推荐使用ValueTask<T>作为返回值。
-//res = await ValueTaskDemo.GetValueTaskAsync(3);
+//var res = await ValueTaskDemo.GetValueTaskAsync(3);
 ////注意：不要阻塞ValueTask，也就是说，不要对一个ValueTask对象使用.Result、.Wait()、.GetAwaiter().GetResult()
 ////如果一定要阻塞，那么先使用IsCompleted判断任务状态，在完成时才使用以上阻塞的方式获取结果。例如：
-////var task = ValueTaskDemo.GetValueTaskAsync(3);
-////if (task.IsCompleted)
-////{
-////    Console.WriteLine(task.Result);
-////}
+//var task = ValueTaskDemo.GetValueTaskAsync(3);
+//if (task.IsCompleted)
+//{
+//    Console.WriteLine(task.Result);
+//}
 //Console.WriteLine(res);
 //ValueTaskDemo.ShowCache(); //key=3被添加到Cache中
 #endregion
@@ -1190,7 +1190,7 @@ class Foo2
 class MyDataModel
 {
     public IEnumerable<int> Data { get; set; }
-    public bool IsDateLoaded { get; private set; } = false;
+    public bool IsDataLoaded { get; private set; } = false;
 
     /// <summary>
     /// 我们希望在同步的构造函数中，调用异步方法来初始化<see cref="MyDataModel.Data">Data</see>属性。
@@ -1201,15 +1201,15 @@ class MyDataModel
         //LoadDataAsync(); //F&F会导致无法对任务进行追踪，也无法抓住内部的异常。
 
         //方法一：SafeFireAndForget
-        //SafeFireAndForget(LoadDataAsync(), () => IsDateLoaded = true, ex => throw ex);
+        //SafeFireAndForgetAsync(LoadDataAsync(), () => IsDataLoaded = true, ex => throw ex);
 
         //方法一的扩展方法
-        //LoadDataAsync().Await(() => IsDateLoaded = true, ex => throw ex);
+        //LoadDataAsync().Await(() => IsDataLoaded = true, ex => throw ex);
 
         //方法二：使用内置的ContinueWith()
-        //LoadDataAsync().ContinueWith(t=>IsDateLoaded = true, TaskContinuationOptions.OnlyOnRanToCompletion); //只在Task成功执行后才执行回调。
+        //LoadDataAsync().ContinueWith(t=>IsDataLoaded = true, TaskContinuationOptions.OnlyOnRanToCompletion); //只在Task成功执行后才执行回调。
         //这种调用只能传入成功的回调，如果想要再传入失败的回调，可以将两个回调包装成一个方法，将这个方法传入ContinueWith：
-        LoadDataAsync().ContinueWith(t => OnDataLoaded(t));
+        //LoadDataAsync().ContinueWith(t => OnDataLoaded(t));
         //方法二的缺点：
         //1.ContinueWith()会返回一个Task，即使LoadDataAsync()本身并不需要返回任何东西，这凭空增加了一些开销；
         //2.ContinueWith()默认调用当前线程去执行后续操作，这一点是比较危险的。（回忆使用.Result后再调用UI线程执行一些操作时发生的死锁：.Result阻塞了UI线程，而在
@@ -1228,7 +1228,7 @@ class MyDataModel
     {
         await Task.Delay(1000);
         Data = Enumerable.Range(1, 10).ToList();
-        //throw new Exception("Data loading error!"); //模拟读取数据时发生异常。
+        throw new Exception("Data loading error!"); //模拟读取数据时发生异常。
     }
 
     /// <summary>
@@ -1242,7 +1242,7 @@ class MyDataModel
     /// <param name="task"></param>
     /// <param name="onCompleted"></param>
     /// <param name="onError"></param>
-    async void SafeFireAndForget(Task task, Action? onCompleted = null, Action<Exception>? onError = null)
+    async void SafeFireAndForgetAsync(Task task, Action? onCompleted = null, Action<Exception>? onError = null)
     {
         try
         {
@@ -1265,7 +1265,7 @@ class MyDataModel
         {
             Console.WriteLine(task.Exception.InnerException); //失败的回调：这里抛出的是AggregateException，使用InnerException获取原本的异常。
         }
-        IsDateLoaded = true; //成功的回调
+        IsDataLoaded = true; //成功的回调
     }
 
     /// <summary>
@@ -1278,7 +1278,7 @@ class MyDataModel
         try
         {
             await dataModel.LoadDataAsync();
-            dataModel.IsDateLoaded = true;
+            dataModel.IsDataLoaded = true;
             return dataModel;
         }
         catch (Exception)
@@ -1332,7 +1332,7 @@ class CanNotUseLockInAsyncTask
 
     //initialCount:初始线程数
     //maxCount:最大线程数
-    private readonly SemaphoreSlim _semaphore = new(10, 10);
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     /// <summary>
     /// 原异步方法
@@ -1354,9 +1354,10 @@ class CanNotUseLockInAsyncTask
         //无法在一个lock语句中使用await：lock语句表达的意思是，其内部所有的操作，都必需要在一个单独的线程中完成，以保证对资源操作时不会有
         //其他线程的干扰；但await语句并不能保证该异步任务内部全部都在一个线程中进行(回忆line260的异步任务)，因此会导致lock语句中进行线程切换，
         //而这与lock的初衷相违背。另外await后续的代码默认情况下会切回到原线程中，这也同样会在lock语句中造成线程切换。
-        //lock (_lock) 
+        //lock (_lock)
         //{
-        //    //await Task.Delay(1000); //报错
+        //    await Task.Delay(100); //
+        //    return x * x;
         //}
 
         //使用Nito.Asyncex提供的lock

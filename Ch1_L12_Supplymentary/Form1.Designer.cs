@@ -48,7 +48,7 @@
             runBtn.TabIndex = 1;
             runBtn.Text = "Run";
             runBtn.UseVisualStyleBackColor = true;
-            runBtn.Click += runBtn_Click; //事件的回调列表 += 回调函数
+            runBtn.Click += runBtn_Click;
             // 
             // richTextBox
             // 
@@ -62,7 +62,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(800, 332);
             Controls.Add(richTextBox);
             Controls.Add(runBtn);
             Controls.Add(progressBar);

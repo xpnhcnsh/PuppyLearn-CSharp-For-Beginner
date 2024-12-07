@@ -16,11 +16,11 @@ namespace Ch1_L12_Supplymentary
         {
             try
             {
-                //runBtn.Enabled = false;
+                runBtn.Enabled = false;
                 //以下演示四种Task的调用方法：
 
                 //1.1.正确用法：默认情况下ConfigureAwait(true)
-                await DoJobAsync();
+                //await DoJobAsync().ConfigureAwait(true);
 
                 //1.2.ConfigureAwait(false)时：
                 //使用SynchronizationContext.Current将UI线程所在的同步上下文传入方法，在方法内部操作progressBar对象。
@@ -95,9 +95,9 @@ namespace Ch1_L12_Supplymentary
                 for (int i = 0; i <= 100; i++)
                 {
                     await Task.Delay(50).ConfigureAwait(false); //ConfigureAwait(false)，会从线程池中取其他任意空闲线程执行后续代码，不会返回UI线程。
-                                                                //此，如果需要操作progressBar，需要使用synchronizationContext，该参数由外部传入
+                                                                //因此，如果需要操作progressBar，需要使用synchronizationContext，该参数由外部传入
                                                                 //其表示UI线程所在的同步上下文，在这里通过Send()方法，通过UI线程执行progressBar.Value = i。
-                    synchronizationContext.Send(_ => progressBar.Value = i, null);
+                    synchronizationContext.Send( _ => progressBar.Value = i, null);
                 }
             }
             catch (Exception)

@@ -1,6 +1,4 @@
-﻿
-
-//Test
+﻿//Test
 
 #region 概念和步骤
 //1. TDD (Test Driven Development)：测试驱动开发，通常指讲测试行为往前提，不是把软件全部开发完了再去测试，而是在每个单元开发完毕猴就单独测试这个单元，被称为单元测试(Unit Test)。
@@ -79,6 +77,7 @@ public class UserService
     }
 
 }
+
 /// <summary>
 /// 虽然在这个阶段UserRepository还未被实现，但是我们知道这个接口本身已经完成了，实际开发中，这个接口
 /// 会在另一个项目或者文件里，这里为了简化和UserService写在了一起
