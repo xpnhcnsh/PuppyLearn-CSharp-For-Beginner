@@ -101,3 +101,11 @@ public interface IUserRepository
 //stryker-config.json文件。
 //可以看到当前我们的Ch1_L14.Test的Mutation Score是90%。
 #endregion
+
+#region 在Github Action中用Stryker实现CICD
+//我们希望实现当程序员提交PR的时候，有某种机制能够自动的去测试代码的mutation score，然后根据结果自动选择是否允许提交PR。
+//这个过程被称为CICD(持续集成、持续部署，Continuous Integration & Continuous Deployment)，即每次合并代码时，都进行构建、测试、部署，以保证在合并前发现问题。
+//Github提供Action工具来实现CICD。（类似的流程被统称为PipeLine）
+//参考：https://github.com/stryker-mutator/github-action
+//参考：https://medium.com/@hamed.shirbandi/mutation-testing-with-stryker-in-net-projects-ff1f05ddce8f
+#endregion
