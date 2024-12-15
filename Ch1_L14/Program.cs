@@ -90,4 +90,14 @@ public interface IUserRepository
 #endregion
 
 #region Stryker：Mutation Test（变异测试）
+//传统的单元测试中，只要测试代码运行通过就算覆盖到了，如果程序员在测试代码中不写任何的Assert，也同样能保证测试代码正常通过，但这样并没有起到测试的效果。
+//意味着通过偷懒可以实现一个很高的覆盖率，但其实并没有真正测试代码。因此单纯考虑覆盖率并不能很好的反应测试代码的质量。
+//Mutation Test会在执行测试代码之前，将测试代码进行一些修改，比如-变+，*变/等，然后再执行测试后，理论上应该测试不通过，如果测试通过了，意味着测试代码
+//未测试某些逻辑分支。
+//在Mutation Test中，被改变的代码被称为Mutants(变异体)，未通过测试的变异体被称为killed，通过测试的变异体被称为survivor，killed越多越好，survivor越少越好。
+
+//1. 安装Stryker：https://stryker-mutator.io/docs/stryker-net/getting-started/，使用Install globally的方法。
+//2. 在Ch1_L14.Test目录下执行dotnet stryker，执行前确保Ch1_L14.Test引用了Ch1_L14项目。如果需要额外配置，在Ch1_L14.Test目录下添加一个
+//stryker-config.json文件。
+//可以看到当前我们的Ch1_L14.Test的Mutation Score是90%。
 #endregion

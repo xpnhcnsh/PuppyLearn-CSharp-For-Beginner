@@ -48,7 +48,7 @@ namespace Ch1_L12_Supplymentary
                 //...
                 //如果在异步任务中配置ConfigureAwait(false)，表示后续代码不由UI线程执行，而是其他任意空闲线程执行，但这会引起另外的错误：
                 //由于只有UI线程对progressBar对象有访问和控制权，因此其他任意线程中调用progressBar.Value = i都会报错。
-                //DoJobAsync().Wait();
+                DoJobAsync().Wait();
                 //DoJobAsync(SynchronizationContext.Current!).Wait();
 
                 //4.同Wait()。
@@ -94,7 +94,7 @@ namespace Ch1_L12_Supplymentary
             {
                 for (int i = 0; i <= 100; i++)
                 {
-                    await Task.Delay(50).ConfigureAwait(false); //ConfigureAwait(false)，会从线程池中取其他任意空闲线程执行后续代码，不会返回UI线程。
+                    await Task.Delay(50).ConfigureAwait(true); //ConfigureAwait(false)，会从线程池中取其他任意空闲线程执行后续代码，不会返回UI线程。
                                                                 //因此，如果需要操作progressBar，需要使用synchronizationContext，该参数由外部传入
                                                                 //其表示UI线程所在的同步上下文，在这里通过Send()方法，通过UI线程执行progressBar.Value = i。
                     synchronizationContext.Send( _ => progressBar.Value = i, null);

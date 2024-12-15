@@ -1,0 +1,12 @@
+﻿{
+  "stryker-config": {
+    "project": "Ch1_L14.csproj", //待测试项目
+    "reporters": [ "cleartexttree" ], //选择结果显示的形式
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 40
+    },
+    "mutate": [ "Program.cs" ] //详细设置见：https://stryker-mutator.io/docs/stryker-net/Configuration#mutate-glob
+  }
+}

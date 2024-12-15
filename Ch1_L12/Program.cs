@@ -14,7 +14,7 @@ using System.Threading;
 using System.Threading.Channels;
 using ThirdPartyClassLib;
 
-int count = 0;
+//int count = 0;
 //var thread1 = new Thread(ThreadMethod);
 //var thread2 = new Thread(ThreadMethod);
 //thread1.Start();
@@ -982,7 +982,7 @@ static void LongRunningJob()
 }
 
 //方案2.使用Thread来运行LongRunningJob，使用Thread.Interrupt强制打断，并使用信号量(TaskCompletionSource)等方式暴露一个可等待的异步任务：
-//using(var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(2000)))
+//using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(2000)))
 //{
 //    try
 //    {
@@ -998,9 +998,9 @@ static void LongRunningJob()
 //        Console.WriteLine($"Task failed:{ex}");
 //    }
 //    Console.WriteLine("Done"); //发现：2秒后打印Task was canceled和Done；继续等待并没有打印Long running job completed!，
-//                               //说明LongRunningJob的确被取消了。这是由于当cts被cancel时，_thread.Interrupt()被触发，运行委托的线程被
-//                               //杀死，因此委托本身也就不复存在，所以任务可以被正确取消。
-//    //Console.ReadKey();
+////    说明LongRunningJob的确被取消了。这是由于当cts被cancel时，_thread.Interrupt()被触发，运行委托的线程被
+////    杀死，因此委托本身也就不复存在，所以任务可以被正确取消。
+//    Console.ReadKey();
 //}
 
 //CancelableThreadTask的局限
@@ -1051,7 +1051,7 @@ static void LongRunningJob()
 //If you need to terminate the execution of third-party code forcibly in .NET 5+, run it in the separate process and use Process.Kill.
 //我们使用process运行第三方库中的方法：
 //using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-//注意：.\ThirdPartyMethodWrapper.exe的路径必须提前build才会生成
+////注意：.\ThirdPartyMethodWrapper.exe的路径必须提前build才会生成
 //var processTask = new CancelableProcessTask(@".\ThirdPartyMethodWrapper.exe", "uncancelable");
 //using (new SimpleTimer("Task started!"))
 //{
@@ -1071,38 +1071,38 @@ static void LongRunningJob()
 #region 使用Barrier实现多个异步任务同时完成
 //场景：2个任务同时进行，且对于每个任务来说，都有分为3个阶段，任意一个任务每完成一个阶段，都需要等待另一个任务也完成该阶段后，再同时开始下一个阶段，直到
 //最后一个阶段同步完成。
-//var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-//Barrier barrier = new Barrier(2, postPhaseAction =>
-//{
-//    Console.WriteLine($"阶段{postPhaseAction.CurrentPhaseNumber+1}完成 \n");
-//});
+var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1000));
+Barrier barrier = new Barrier(2, postPhaseAction =>
+{
+    Console.WriteLine($"阶段{postPhaseAction.CurrentPhaseNumber + 1}完成 \n");
+});
 
-// var task1 = Task.Run(() => 
-//{
-//    for(int i=0; i < 3; i++)
-//    {
-//        Console.WriteLine($"任务1正在进行阶段{i + 1}...");
-//        Thread.Sleep(2000);
-//        Console.WriteLine($"任务1完成阶段{i + 1}...");
-//        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
-//    }
-//});
+var task1 = Task.Run(() =>
+{
+   for (int i = 0; i < 3; i++)
+   {
+       Console.WriteLine($"任务1正在进行阶段{i + 1}...");
+       Thread.Sleep(2000);
+       Console.WriteLine($"任务1完成阶段{i + 1}...");
+       barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
+   }
+});
 
-//var task2 = Task.Run(() =>
-//{
-//    for (int i = 0; i < 3; i++)
-//    {
-//        Console.WriteLine($"任务2正在进行阶段{i + 1}...");
-//        Thread.Sleep(1000);
-//        Console.WriteLine($"任务2完成阶段{i + 1}...");
-//        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
-//    }
-//});
+var task2 = Task.Run(() =>
+{
+    for (int i = 0; i < 3; i++)
+    {
+        Console.WriteLine($"任务2正在进行阶段{i + 1}...");
+        Thread.Sleep(1000);
+        Console.WriteLine($"任务2完成阶段{i + 1}...");
+        barrier.SignalAndWait(cts.Token); //指示本任务的某个phase已完成，等待其他任务；可接收一个cts以取消任务
+    }
+});
 
-//var allTasks = Task.WhenAll([task1, task2]);
-//await allTasks;
-//if (allTasks.IsCompleted )
-//    Console.WriteLine("All tasks completed!");
+var allTasks = Task.WhenAll([task1, task2]);
+await allTasks;
+if (allTasks.IsCompleted)
+    Console.WriteLine("All tasks completed!");
 
 #endregion
 
@@ -1570,7 +1570,7 @@ class CancelableProcessTask
             else
             {
                 if (token.IsCancellationRequested) //如果token被cancel就设置task为canceled
-                    _tcs.SetCanceled(token);
+                    _tcs.TrySetCanceled(token);
                 else
                     _tcs.SetException(new Exception($"Process exited with code {_process.ExitCode}"));
             }
